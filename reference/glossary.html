@@ -92,6 +92,19 @@
     <dt>Up to date before merging <span class="tag">setup</span></dt>
     <dd>A protection rule requiring a PR to include the latest <code>main</code> (and be re-tested against it) before it can merge — so it was validated against what it's actually merging into, not a stale snapshot.</dd>
 
+    <dt>Reviewable PR (S·S·S) <span class="tag">review</span></dt>
+    <dd>A pull request worth a human's review time: <strong>Small</strong> (a few hundred changed lines at most), <strong>Single-purpose</strong> (one outcome, statable in a sentence with no "and"), and <strong>Self-describing</strong> (says what changed, why, what to check on the preview, and what's out of scope).</dd>
+
+    <dt>Review ceiling <span class="tag">review</span></dt>
+    <dd>The empirical limit on how much code a human can review well: roughly <strong>200–400 LOC</strong> in a <strong>60–90 minute</strong> sitting, yielding 70–90% defect detection; past ~500 LOC/hr detection collapses. The reason PR size is the master variable for review quality.
+      <div class="x"><a href="https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/">SmartBear — Cisco code-review study</a></div></dd>
+
+    <dt>Scoping the task / the brief <span class="tag">review</span></dt>
+    <dd>How a director produces small PRs: deciding the PR's size <em>before</em> the agent writes code, by giving it one outcome, a file/area boundary, and a feature flag for anything too big to ship whole. PR size is set in the brief, not fixed at review time.</dd>
+
+    <dt>Work slicing / partitioning <span class="tag">concurrency</span></dt>
+    <dd>Splitting work across parallel agents so PRs stay small and don't collide: partition by feature and files (non-overlapping turf), and land shared foundations first as their own PR before features branch off them. Directly defuses the logical conflict.</dd>
+
     <dt>Logical (semantic) conflict <span class="tag">concurrency</span></dt>
     <dd>When two PRs each pass CI in isolation but break <code>main</code> when combined — e.g. one renames a function, the other (branched from older trunk) calls the old name. Git shows <em>no</em> textual conflict; only running the combination reveals it.</dd>
 

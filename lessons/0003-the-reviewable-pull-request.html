@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 3 · The Reviewable Pull Request</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b5b5b; --line:#e3e0d8; --bg:#faf8f3; --card:#fff;
+    --accent:#3a6ea5; --accent-soft:#eef3f8; --trunk:#2e7d52; --trunk-soft:#e7f3ec;
+    --warn:#b4541f; --warn-soft:#fbeee5; --ok:#2e7d52; --bad:#b4292f;
+    --a1:#3a6ea5; --a2:#8a4fb0; --a3:#b4541f;
+  }
+  *{box-sizing:border-box}
+  body{font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:48px 20px}
+  .wrap{max-width:760px; margin:0 auto}
+  header{border-bottom:3px solid var(--ink); padding-bottom:18px}
+  .kicker{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0}
+  h1{font-size:33px; margin:8px 0 6px; letter-spacing:-.015em; line-height:1.15}
+  .goal{background:var(--accent-soft); border-left:4px solid var(--accent); padding:12px 16px; margin:18px 0 0; border-radius:0 8px 8px 0; font-size:15px}
+  .goal b{color:var(--accent)}
+  h2{font-size:23px; margin:44px 0 6px; letter-spacing:-.01em}
+  h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:8px}
+  p{margin:14px 0}
+  .lead{font-size:19px}
+  a{color:var(--accent)}
+  sup a{text-decoration:none; font-weight:700; font-size:12px; padding:0 1px}
+  code{background:#efece4; padding:1.5px 5px; border-radius:5px; font-size:14px}
+  .trunk-word{color:var(--trunk); font-weight:700}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin:20px 0}
+  .callout{background:var(--warn-soft); border-left:4px solid var(--warn); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .callout b{color:var(--warn)}
+  .you{background:var(--trunk-soft); border-left:4px solid var(--trunk); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .you b{color:var(--trunk)}
+  ul{margin:14px 0; padding-left:22px} li{margin:7px 0}
+  figure{margin:26px 0; text-align:center}
+  figcaption{font-size:13px; color:var(--muted); margin-top:10px}
+
+  /* stat band */
+  .stats{display:flex; gap:12px; flex-wrap:wrap; margin:22px 0}
+  .stat{flex:1 1 150px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+  .stat .big{font-size:27px; font-weight:800; color:var(--accent); letter-spacing:-.02em; line-height:1.1}
+  .stat .lbl{font-size:13.5px; color:var(--muted); margin-top:4px}
+
+  /* three properties */
+  .props{display:grid; grid-template-columns:1fr; gap:0; margin:18px 0}
+  .prop{display:flex; gap:14px; align-items:flex-start; padding:16px 0; border-bottom:1px solid var(--line)}
+  .prop:last-child{border-bottom:none}
+  .prop .badge{flex:0 0 30px; width:30px; height:30px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-weight:800; display:flex; align-items:center; justify-content:center; font-size:16px}
+  .prop b{display:block}
+  .prop span{font-size:15px; color:#333}
+
+  /* triage widget */
+  .triage{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 22px 20px; margin:26px 0}
+  .triage h3{font-size:15px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:18px 0 4px}
+  .pr{border:1px solid var(--line); border-radius:11px; padding:14px 16px; margin:16px 0}
+  .pr .title{font-weight:700; font-size:16px}
+  .pr .meta{font-size:13px; color:var(--muted); margin:3px 0 4px; font-variant-numeric:tabular-nums}
+  .pr .desc{font-size:14.5px; color:#333; margin:6px 0 12px}
+  .btns{display:flex; gap:8px; flex-wrap:wrap}
+  .tbtn{flex:1 1 30%; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:9px 10px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:.12s}
+  .tbtn:hover{border-color:var(--accent)}
+  .tbtn:disabled{cursor:default; opacity:.85}
+  .tbtn.picked-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .tbtn.picked-wrong{border-color:var(--bad); background:#fbecec; color:#7d2025}
+  .tbtn.reveal-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .verdict{font-size:14.5px; margin-top:12px; padding:11px 14px; border-radius:8px; display:none; background:var(--accent-soft); color:#234}
+  .verdict.show{display:block}
+  .tprog{font-weight:600; text-align:center; color:var(--muted); margin:8px 0 2px; font-size:14px}
+
+  /* quiz */
+  .quiz{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 24px 24px; margin:28px 0}
+  .q{padding:20px 0; border-bottom:1px solid var(--line)} .q:last-child{border-bottom:none}
+  .q p.qtext{font-weight:600; margin:6px 0 14px}
+  .opt{display:block; width:100%; text-align:left; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:11px 14px; margin:8px 0; font:inherit; font-size:15px; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--ok); background:#eaf5ee}
+  .opt.wrong{border-color:var(--bad); background:#fbecec}
+  .opt:disabled{cursor:default}
+  .fb{font-size:14.5px; margin-top:10px; padding:11px 14px; border-radius:8px; display:none}
+  .fb.show{display:block}
+  .fb.good{background:#eaf5ee; color:#1f5c3a}
+  .fb.bad{background:#fbecec; color:#7d2025}
+  .score{font-size:15px; font-weight:600; margin-top:18px; text-align:center; color:var(--muted)}
+
+  .ask{margin-top:40px; background:#1a1a1a; color:#f3efe6; border-radius:14px; padding:22px 24px}
+  .ask b{color:#fff}
+  footer{margin-top:30px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  footer ol{padding-left:20px; margin:8px 0} footer a{color:var(--accent)}
+  @media print{ body{background:#fff;padding:0} .quiz,.ask,.triage{break-inside:avoid} .opt,.tbtn{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Lesson 3 · Trunk-Based Development</p>
+    <h1>The Reviewable Pull Request</h1>
+    <div class="goal"><b>By the end of this lesson</b> you'll be able to look at any incoming PR and judge in seconds whether to <em>review it, split it, or send it back</em> — and you'll know the one move that produces small PRs every time: scoping the agent's task <em>before</em> it writes a line.</div>
+  </header>
+
+  <p class="lead">Lessons 1 and 2 made the trunk safe: every change arrives as a tested, reviewed PR, and concurrency can't break <code>main</code>. So your bottleneck is no longer "did an agent break the trunk?" — it's <b>"how fast can I review?"</b> This lesson is about making that fast and trustworthy. The lever is almost entirely <em>PR size</em>.</p>
+
+  <h2><span class="n">1</span>Size is the master variable</h2>
+  <p>The largest study of code review ever run — Cisco, ~2,500 reviews, analyzed by SmartBear — found a sharp ceiling on how much a human can actually review well:<sup><a href="#r1">1</a></sup></p>
+
+  <div class="stats">
+    <div class="stat"><div class="big">200–400</div><div class="lbl">lines of code is the most a reviewer can examine effectively in one sitting</div></div>
+    <div class="stat"><div class="big">70–90%</div><div class="lbl">of defects found at that size, over a 60–90&nbsp;min review</div></div>
+    <div class="stat"><div class="big">500/hr</div><div class="lbl">LOC inspection rate above which defect detection collapses</div></div>
+  </div>
+
+  <p>Past that ceiling you aren't really reviewing — you're skimming and clicking <b>approve</b>. A 1,200-line PR doesn't get reviewed four times as carefully as a 300-line one; it gets reviewed <em>worse</em>, because attention falls off a cliff after about 90 minutes.<sup><a href="#r1">1</a></sup> And the cost compounds: smaller PRs are also picked up faster, merge faster, and are far easier to revert if something slips.<sup><a href="#r2">2</a></sup></p>
+  <div class="callout"><b>The trap with AI committers:</b> an agent can produce 1,500 lines as easily as 150. There's no natural friction pushing the diff small the way there is for a human typing it. If <em>you</em> don't impose the size limit, nothing will — and "looks fine, approve" on a giant diff is how unreviewed code reaches a trunk you're personally signing off on.</div>
+
+  <h2><span class="n">2</span>The three properties of a reviewable PR</h2>
+  <p>Size is necessary but not sufficient. A PR you can review in a few minutes has <b>three</b> properties — remember them as <b>S·S·S</b>:</p>
+
+  <div class="card">
+    <div class="props">
+      <div class="prop"><div class="badge">S</div><div><b>Small</b><span>A few hundred changed lines at most — inside the review ceiling above. Small naturally stays <em>short-lived</em> too, which is the whole TBD bargain from Lesson 1: tiny trips around the loop.<sup><a href="#r3">3</a></sup></span></div></div>
+      <div class="prop"><div class="badge">S</div><div><b>Single-purpose</b><span>It does <em>one</em> thing. "Add password-reset endpoint" — not "add password reset, rename the user model, and bump three dependencies." If you can't state the PR's purpose in one sentence without "and," it's really several PRs.</span></div></div>
+      <div class="prop"><div class="badge">S</div><div><b>Self-describing</b><span>The title and description tell you what changed and <em>why</em>, what to check on the preview, and what's intentionally out of scope — so you review against an intent, not by reverse-engineering the diff.</span></div></div>
+    </div>
+  </div>
+  <p>These reinforce each other: a single-purpose change is almost always small, and a small change is easy to describe honestly. When one breaks, usually all three do — that's your signal.</p>
+
+  <h2><span class="n">3</span>You don't shrink PRs — you scope tasks</h2>
+  <p>Here's the mindset shift for your role. You are <em>not</em> going to chop a 1,200-line diff into four after the fact — that's slow and wasteful. As the director, you produce small PRs the same way you'd produce good code from any contractor: <b>by scoping the work before it starts.</b> The size of the PR is decided by the brief you give the agent, not by anything you do at review time.</p>
+  <p>A good brief to an agent carries three things:</p>
+  <ul>
+    <li><b>One outcome.</b> A single shippable behavior — the "single-purpose" property, set at the source. "Build the password-reset email flow" is one outcome; "build account management" is twenty.</li>
+    <li><b>A boundary.</b> Which files/areas it should touch, and what it must <em>not</em> wander into. This is also what keeps parallel agents off each other's turf (next section).</li>
+    <li><b>A flag for anything not yet shippable.</b> If the outcome is too big to land safely in one small PR, the answer isn't a long-lived branch — it's to merge the pieces behind a <b>feature flag</b> so each piece is small, hidden, and on trunk. (That's Lesson 6; for now just know it's the escape hatch that lets "small" and "incomplete" coexist.)</li>
+  </ul>
+  <div class="you"><b>Your steering lever:</b> when a PR comes back too big or doing three things at once, the fix isn't in the PR — it's in the next brief. Send it back with "split this into the endpoint and the UI as two PRs," and tighten how you scope the following task. You're managing <em>intent and boundaries</em>, not diffs.</div>
+
+  <h2><span class="n">4</span>Slicing work so PRs stay small <em>and</em> don't collide</h2>
+  <p>You asked about several agents shipping several features in one day. Small + single-purpose is also what makes that <em>safe</em>, because it lets you hand each agent a <b>non-overlapping slice</b>. Two rules of thumb:</p>
+  <ul>
+    <li><b>Partition by feature and by files.</b> Agent A owns the billing page, Agent B owns the settings page. Different outcomes, different files → their PRs can't textually conflict, and they're each small enough to review on their own.</li>
+    <li><b>Land shared foundations first, alone.</b> If three features all need a new <code>User</code> field or a shared component, that change is its <em>own</em> small PR that merges first. Then the three feature agents branch from a trunk that already has it — instead of three agents each inventing it and colliding.</li>
+  </ul>
+  <p>Notice this directly defuses the <b>logical conflict</b> from Lesson 2: the rename-vs-old-name disaster happens when two agents touch the same surface from stale starting points. Non-overlapping slices + shared changes landed first means they rarely touch the same surface at all.</p>
+
+  <figure>
+  <svg viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg" width="100%" role="img" aria-label="A shared foundation PR merging first, then three non-overlapping feature PRs">
+    <defs><marker id="a" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5b5b5b"/></marker></defs>
+    <!-- trunk -->
+    <line x1="40" y1="125" x2="640" y2="125" stroke="#2e7d52" stroke-width="6"/>
+    <text x="40" y="150" fill="#2e7d52" font-family="sans-serif" font-weight="700" font-size="13">main</text>
+    <g font-family="sans-serif" font-size="11.5" text-anchor="middle">
+      <!-- shared foundation lands first -->
+      <rect x="120" y="88" width="120" height="34" rx="8" fill="#e7f3ec" stroke="#2e7d52"/>
+      <text x="180" y="103" fill="#2e7d52" font-weight="700">Shared: User field</text>
+      <text x="180" y="116" fill="#2e7d52" font-size="10">merges first, alone</text>
+      <line x1="180" y1="122" x2="180" y2="125" stroke="#2e7d52" stroke-width="1.5"/>
+      <!-- three feature PRs after -->
+      <line x1="360" y1="125" x2="360" y2="55" stroke="#3a6ea5" stroke-width="1.5" marker-end="url(#a)"/>
+      <rect x="300" y="30" width="120" height="30" rx="8" fill="#eef3f8" stroke="#3a6ea5"/>
+      <text x="360" y="49" fill="#3a6ea5">A · Billing page</text>
+      <line x1="470" y1="125" x2="470" y2="195" stroke="#8a4fb0" stroke-width="1.5" marker-end="url(#a)"/>
+      <rect x="410" y="195" width="120" height="30" rx="8" fill="#f3ecf8" stroke="#8a4fb0"/>
+      <text x="470" y="214" fill="#8a4fb0">B · Settings page</text>
+      <line x1="560" y1="125" x2="560" y2="55" stroke="#b4541f" stroke-width="1.5" marker-end="url(#a)"/>
+      <rect x="500" y="30" width="120" height="30" rx="8" fill="#fbeee5" stroke="#b4541f"/>
+      <text x="560" y="49" fill="#b4541f">C · Reports page</text>
+    </g>
+  </svg>
+  <figcaption>The shared change lands as its own small PR <em>first</em>; then three agents fan out across separate features and files. Each PR is small, single-purpose, and on non-overlapping turf — so all three are reviewable <em>and</em> can't collide.</figcaption>
+  </figure>
+
+  <h2><span class="n">5</span>Practice: triage the incoming queue</h2>
+  <p>It's the start of your day and four PRs are waiting. For each, decide as the reviewer: <b>Review now</b> (it's reviewable), <b>Split it</b> (too big / doing several things), or <b>Send back</b> (you can't tell what it does). Click your call.</p>
+
+  <div class="triage" id="triage">
+    <div class="pr" data-correct="review">
+      <div class="title">Add “forgot password” email endpoint</div>
+      <div class="meta">+118 −12 · 3 files · “Adds POST /auth/reset-request that emails a reset link. Preview: try it on /login → ‘Forgot password’. Out of scope: the reset form UI (separate PR).”</div>
+      <div class="btns">
+        <button class="tbtn" data-k="review">Review now</button>
+        <button class="tbtn" data-k="split">Split it</button>
+        <button class="tbtn" data-k="sendback">Send back</button>
+      </div>
+      <div class="verdict">✅ <b>Review now.</b> Small (~130 lines), single-purpose (one endpoint), and self-describing (states what to check <em>and</em> what's out of scope). This is the S·S·S target — exactly what you want every PR to look like.</div>
+    </div>
+
+    <div class="pr" data-correct="split">
+      <div class="title">Account management</div>
+      <div class="meta">+1,460 −320 · 28 files · “Adds password reset, the settings page redesign, a new User.role field, and upgrades the auth library.”</div>
+      <div class="btns">
+        <button class="tbtn" data-k="review">Review now</button>
+        <button class="tbtn" data-k="split">Split it</button>
+        <button class="tbtn" data-k="sendback">Send back</button>
+      </div>
+      <div class="verdict">✅ <b>Split it.</b> Four "and"s in the description and 1,460 lines — far past the ~400-line review ceiling. You can't review this honestly. Send the agent a tighter brief: the <code>User.role</code> field lands first as its own PR, then reset, settings, and the lib bump as separate small PRs.</div>
+    </div>
+
+    <div class="pr" data-correct="sendback">
+      <div class="title">Updates and fixes</div>
+      <div class="meta">+240 −90 · 9 files · “Various improvements.”</div>
+      <div class="btns">
+        <button class="tbtn" data-k="review">Review now</button>
+        <button class="tbtn" data-k="split">Split it</button>
+        <button class="tbtn" data-k="sendback">Send back</button>
+      </div>
+      <div class="verdict">✅ <b>Send back.</b> It's near the size limit, but you have no idea what it <em>does</em> or why — it fails "self-describing." Reviewing it means reverse-engineering 9 files of intent. Ask for a real title, a purpose, and what to verify on the preview before you spend a minute on the diff.</div>
+    </div>
+
+    <div class="pr" data-correct="review">
+      <div class="title">Fix off-by-one in pagination total count</div>
+      <div class="meta">+9 −3 · 1 file · “Last page showed one extra empty slot; total count was inclusive. Preview: /users?page=last.”</div>
+      <div class="btns">
+        <button class="tbtn" data-k="review">Review now</button>
+        <button class="tbtn" data-k="split">Split it</button>
+        <button class="tbtn" data-k="sendback">Send back</button>
+      </div>
+      <div class="verdict">✅ <b>Review now.</b> Tiny, single-purpose, self-describing, with a preview path to check. Small bug-fix PRs like this are the lifeblood of TBD — review and merge in minutes, keep them flowing.</div>
+    </div>
+
+    <div class="tprog" id="tprog">0 / 4 triaged</div>
+  </div>
+
+  <h2><span class="n">6</span>Check yourself</h2>
+  <div class="quiz" id="quiz">
+    <div class="q" data-correct="b">
+      <p class="qtext">1. An agent hands you a 1,300-line PR that passed CI and looks plausible. Why is "looks fine, approve" the wrong move here specifically?</p>
+      <button class="opt" data-k="a">CI already tested it, so your review is redundant either way.</button>
+      <button class="opt" data-k="b">Defect detection collapses well below this size — past ~400 lines you're skimming, not reviewing, so you'd be signing off on effectively unreviewed code.</button>
+      <button class="opt" data-k="c">Large PRs are fine to approve as long as they're single-purpose.</button>
+      <div class="fb good">Right. The Cisco/SmartBear data puts the effective ceiling around 200–400 lines; a 1,300-line diff can't get a real human review, and you're the human gate of record.</div>
+      <div class="fb bad">Re-read §1. CI checks behavior, not intent — your review is the human judgment. And the research is clear that past ~400 lines defect detection falls off sharply, so a 1,300-line approval is effectively unreviewed code reaching your trunk.</div>
+    </div>
+
+    <div class="q" data-correct="c">
+      <p class="qtext">2. A PR is 150 lines but its description is “Add password reset, rename the User model, and bump three deps.” It’s small. Is it reviewable?</p>
+      <button class="opt" data-k="a">Yes — it's well under the size ceiling, so it's fine.</button>
+      <button class="opt" data-k="b">Yes — small always means reviewable.</button>
+      <button class="opt" data-k="c">No — it fails single-purpose. Three unrelated changes in one PR means a bug in one taints review of the others and a revert can't isolate them.</button>
+      <div class="fb good">Exactly. Small is necessary, not sufficient. The "and … and …" is the tell: this is three PRs wearing one coat. Send it back to be split.</div>
+      <div class="fb bad">Size isn't the whole story (that's why it's S·S·S, not just S). This PR does three unrelated things — it fails <b>single-purpose</b>, so a problem in one change muddies review of the others and you can't revert them independently.</div>
+    </div>
+
+    <div class="q" data-correct="a">
+      <p class="qtext">3. A PR comes back doing far too much. As the director, where does the real fix live?</p>
+      <button class="opt" data-k="a">In the next brief — scope the agent's task to one outcome with a boundary before it writes code; that's what makes PRs small at the source.</button>
+      <button class="opt" data-k="b">In the PR — you should manually split the diff into smaller commits yourself.</button>
+      <button class="opt" data-k="c">In branch protection — add a rule that rejects PRs over 400 lines.</button>
+      <div class="fb good">Yes. PR size is decided by the brief, not at review time. Your job is intent and boundaries; you send this one back and tighten the next task's scope.</div>
+      <div class="fb bad">Re-read §3. You're the director, not the committer — you don't hand-split diffs, and a blunt line-count rule blocks legitimate changes too. The lever is scoping the <b>task</b> (one outcome + a boundary) before the agent starts.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">4. Three agents each need a new <code>User.plan</code> field for their feature today. What's the move that keeps PRs small and avoids them colliding?</p>
+      <button class="opt" data-k="a">Let each agent add the field in its own PR; merge queue will sort it out.</button>
+      <button class="opt" data-k="b">Land the <code>User.plan</code> field as its own small PR first, then have the three feature agents branch from the trunk that already has it.</button>
+      <button class="opt" data-k="c">Have all three work on one shared long-lived branch so they see each other's changes.</button>
+      <div class="fb good">Right. Shared foundation first, alone; then fan out across non-overlapping features. That keeps every PR small and stops three agents from inventing (and colliding over) the same change.</div>
+      <div class="fb bad">Re-read §4. Three agents each adding the same field is exactly the duplicate-work / logical-conflict trap — and a long-lived shared branch violates TBD outright. Land the shared change <b>first as its own PR</b>, then branch the features off it.</div>
+    </div>
+    <div class="score" id="score">Answer the questions above to see your score.</div>
+  </div>
+
+  <div class="ask">
+    <b>Ask your teacher.</b> Good follow-ups from here:
+    <ul style="margin:10px 0 0">
+      <li>"Write me a reusable brief template I can give an agent to get small, single-purpose PRs."</li>
+      <li>"Show me how to split that 'Account management' PR into a proper sequence."</li>
+      <li>"What should a PR description contain so I can review against intent?"</li>
+      <li>"Ready for Lesson 4 — what exactly do I check on a PR's preview deploy?"</li>
+    </ul>
+  </div>
+
+  <footer>
+    <b>Sources</b> (fetched &amp; verified 2026-06-09):
+    <ol>
+      <li id="r1"><a href="https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/">Best Practices for Peer Code Review</a> — SmartBear, summarizing the Cisco study (review ≤200–400 LOC, over 60–90 min, 70–90% defect yield; detection drops above ~500 LOC/hr).</li>
+      <li id="r2"><a href="https://arxiv.org/pdf/2203.05045">Do Small Code Changes Merge Faster?</a> — empirical study; and <a href="https://linearb.io/blog/the-pull-request-paradox-merge-faster-by-promoting-your-pr">LinearB</a> on smaller PRs reviewing/merging faster and reverting more easily.</li>
+      <li id="r3"><a href="https://trunkbaseddevelopment.com/short-lived-feature-branches/">Short-lived feature branches</a> — trunkbaseddevelopment.com (small changes stay short-lived).</li>
+    </ol>
+    See <code>reference/reviewable-pr-rubric.html</code> for the printable S·S·S rubric · <code>reference/glossary.html</code> for terms.
+  </footer>
+</div>
+
+<script>
+  // triage
+  const prs = document.querySelectorAll('#triage .pr');
+  const tprog = document.getElementById('tprog');
+  let triaged = 0, tright = 0;
+  prs.forEach(pr => {
+    const key = pr.dataset.correct;
+    const btns = pr.querySelectorAll('.tbtn');
+    const verdict = pr.querySelector('.verdict');
+    btns.forEach(b => b.addEventListener('click', () => {
+      if (pr.dataset.done) return; pr.dataset.done = '1'; triaged++;
+      const right = b.dataset.k === key; if (right) tright++;
+      btns.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add(o === b ? 'picked-right' : 'reveal-right');
+        else if (o === b) o.classList.add('picked-wrong'); });
+      verdict.classList.add('show');
+      tprog.textContent = tright + ' / ' + triaged + ' correct' +
+        (triaged === prs.length ? (tright === prs.length ? ' — clean triage. You can spot a reviewable PR on sight.' : ' — review the verdicts above, then ask me anything.') : '');
+    }));
+  });
+  // quiz
+  let answered = 0, correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    const key = q.dataset.correct;
+    const opts = q.querySelectorAll('.opt');
+    const good = q.querySelector('.fb.good'), bad = q.querySelector('.fb.bad');
+    opts.forEach(opt => opt.addEventListener('click', () => {
+      if (q.dataset.done) return; q.dataset.done = '1'; answered++;
+      const right = opt.dataset.k === key; if (right) correct++;
+      opts.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add('correct');
+        else if (o === opt) o.classList.add('wrong'); });
+      (right ? good : bad).classList.add('show');
+      document.getElementById('score').textContent = correct + ' / ' + answered + ' so far' +
+        (answered === 4 ? (correct === 4 ? ' — you\'ve got the reviewer\'s eye. Ready for Lesson 4.' : ' — check the highlighted answers, then ask me anything.') : '');
+    }));
+  });
+</script>
+</body>
+</html>

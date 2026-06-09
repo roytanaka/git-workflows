@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Reviewable PR — S·S·S Rubric</title>
+<style>
+  :root{--ink:#1a1a1a;--muted:#5b5b5b;--line:#e3e0d8;--bg:#faf8f3;--accent:#3a6ea5;--trunk:#2e7d52;--warn:#b4541f}
+  *{box-sizing:border-box}
+  body{font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);margin:0;padding:42px 20px}
+  .wrap{max-width:720px;margin:0 auto}
+  header{border-bottom:3px solid var(--ink);padding-bottom:14px}
+  .kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0}
+  h1{font-size:26px;margin:6px 0 0}
+  .sub{color:var(--muted);font-size:13px;margin:8px 0 0}
+  h2{font-size:14px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin:30px 0 4px;border-bottom:1px solid var(--line);padding-bottom:5px}
+  ul{list-style:none;padding:0;margin:10px 0}
+  li{display:flex;gap:11px;padding:9px 0;align-items:flex-start;border-bottom:1px solid #efece4}
+  li:last-child{border:none}
+  .b{flex:0 0 18px;width:18px;height:18px;border:2px solid var(--accent);border-radius:4px;margin-top:2px}
+  .t b{display:block;font-size:15px}
+  .t span{font-size:13px;color:var(--muted)}
+  code{background:#efece4;padding:1px 5px;border-radius:4px;font-size:13px}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+  .stat{flex:1 1 150px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .stat .big{font-size:22px;font-weight:800;color:var(--accent);line-height:1.1}
+  .stat .lbl{font-size:12px;color:var(--muted);margin-top:3px}
+  .why{background:#fff;border:1px solid var(--line);border-left:4px solid var(--trunk);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;font-size:13.5px}
+  .why b{color:var(--trunk)}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  td b{color:var(--ink)}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+  .pill.r{background:#eaf5ee;color:#1f5c3a}
+  .pill.s{background:#fbeee5;color:var(--warn)}
+  .pill.b{background:#fbecec;color:#7d2025}
+  pre{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:12.5px;line-height:1.5;overflow:auto;white-space:pre-wrap}
+  footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+  footer a{color:var(--accent)}
+  @media print{body{background:#fff;padding:0}.why,table,pre{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Reference · Git Workflows</p>
+    <h1>The Reviewable PR — S·S·S Rubric</h1>
+    <p class="sub">What a PR must be before it's worth your review time, and how to triage one that isn't. From Lesson 3.</p>
+  </header>
+
+  <h2>The review ceiling (why size rules)</h2>
+  <div class="stats">
+    <div class="stat"><div class="big">200–400</div><div class="lbl">max LOC reviewable in one sitting</div></div>
+    <div class="stat"><div class="big">60–90 min</div><div class="lbl">before attention falls off</div></div>
+    <div class="stat"><div class="big">70–90%</div><div class="lbl">defects caught at that size</div></div>
+    <div class="stat"><div class="big">&gt;500/hr</div><div class="lbl">detection collapses past this rate</div></div>
+  </div>
+
+  <h2>S · S · S — the three properties</h2>
+  <ul>
+    <li><div class="b"></div><div class="t"><b>Small</b><span>A few hundred changed lines at most — inside the ceiling above. Small stays short-lived.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Single-purpose</b><span>One outcome. State the purpose in one sentence with no "and" — if you can't, it's several PRs.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Self-describing</b><span>Title + description say what changed, <em>why</em>, what to check on the preview, and what's out of scope.</span></div></li>
+  </ul>
+
+  <h2>Triage decision (the incoming queue)</h2>
+  <table>
+    <tr><th>If the PR is…</th><th>Call</th><th>What you do</th></tr>
+    <tr><td>Small, single-purpose, self-describing</td><td><span class="pill r">Review now</span></td><td>Review against its stated intent + preview. Merge.</td></tr>
+    <tr><td>Big, or doing several things ("and… and…")</td><td><span class="pill s">Split it</span></td><td>Send back; tighten the next brief into one-outcome PRs. Land shared parts first.</td></tr>
+    <tr><td>You can't tell what it does or why</td><td><span class="pill b">Send back</span></td><td>Ask for a real title, purpose, and preview check before reviewing the diff.</td></tr>
+  </table>
+
+  <h2>The fix lives in the brief, not the PR</h2>
+  <div class="why"><b>You scope tasks, you don't shrink diffs.</b> PR size is decided <em>before</em> the agent writes code. A good brief carries: <b>one outcome</b> · <b>a file/area boundary</b> · <b>a feature flag</b> for anything too big to ship whole.</div>
+  <pre>BRIEF TEMPLATE (give this to the agent)
+Outcome (one shippable behavior): __________
+Touch only: <files/area>   ·   Do NOT touch: __________
+If it won't fit in one small PR → split, or hide behind flag: __________
+PR description must state: what, why, what to check on preview, out-of-scope</pre>
+
+  <h2>Slicing across parallel agents</h2>
+  <ul>
+    <li><div class="b"></div><div class="t"><b>Partition by feature + files</b><span>Agent A → billing; Agent B → settings. Different files can't textually conflict.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Land shared foundations first, alone</b><span>A shared field/component is its own PR that merges first — then features branch off it. Prevents duplicate work and the logical conflict from Lesson 2.</span></div></li>
+  </ul>
+
+  <footer>
+    Sources verified 2026-06-09 · <a href="https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/">SmartBear / Cisco code-review study</a> · See <code>RESOURCES.md</code> for full annotations. Ask your teacher to expand any row.
+  </footer>
+</div>
+</body>
+</html>

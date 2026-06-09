@@ -16,7 +16,7 @@
 ## Curriculum roadmap (provisional)
 1. ✅ The Trunk and the Loop — core mental model (lesson 0001)
 2. ✅ Protecting the Trunk for Parallel Agents — day-one branch protection + merge queue + logical conflicts (lesson 0002)
-3. What makes a reviewable PR — small, short-lived, single-purpose; how to direct agents to produce these. (Also: how to slice work across agents to avoid file collisions — learner asked.)
+3. ✅ The Reviewable Pull Request — S·S·S (small/single-purpose/self-describing), the Cisco review ceiling, triage (review/split/send-back), scoping the brief, and slicing work across agents (lesson 0003).
 4. Preview deploys as the review surface — what to check on each PR's preview URL.
 5. Releases in continuously-deployed web apps — release-from-trunk vs release branches; pick one.
 6. Feature flags — hiding incomplete work on trunk instead of long-lived branches.

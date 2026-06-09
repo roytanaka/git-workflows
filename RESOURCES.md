@@ -24,6 +24,10 @@ All URLs below were fetched and verified live on 2026-06-09.
   The modern, layerable form of branch protection. Use for: how to actually apply the day-one gate.
 - [GitHub — Managing a merge queue](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue)
   Batches ready PRs, re-tests them combined against latest base, merges only what passes together. Use for: many-PRs-per-day concurrency and logical conflicts.
+- [SmartBear — Best Practices for Peer Code Review](https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/)
+  Summarizes the Cisco study (the largest code-review study run): a reviewer is effective up to ~200–400 LOC in a 60–90 min sitting, yielding 70–90% defect detection; detection collapses above ~500 LOC/hr. **The hard number behind "keep PRs small"** — use for the reviewable-PR and review-quality lessons.
+- [Do Small Code Changes Merge Faster? (arXiv 2203.05045)](https://arxiv.org/pdf/2203.05045)
+  Multi-language empirical study confirming smaller changes merge faster. Pair with [LinearB — the PR paradox](https://linearb.io/blog/the-pull-request-paradox-merge-faster-by-promoting-your-pr) on smaller PRs reviewing/merging faster and reverting more easily. Use for: the downstream payoff of small PRs.
 
 ## Wisdom (Communities)
 
@@ -33,3 +37,4 @@ All URLs below were fetched and verified live on 2026-06-09.
 
 ## Gaps
 - No source yet specific to **AI-agent-driven** TBD (humans reviewing, agents committing). This is an emerging area; for now we adapt scaled-TBD review practices. Worth revisiting as material appears.
+- The Cisco/SmartBear review-ceiling numbers come from human-reviewer studies; whether the same ceiling holds when the *committer* is an AI (and the reviewer reads AI-generated diffs) is untested. Treating the human limit as the binding constraint is the conservative call.
