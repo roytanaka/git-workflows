@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 4 · The Preview Deploy as Your Review Surface</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b5b5b; --line:#e3e0d8; --bg:#faf8f3; --card:#fff;
+    --accent:#3a6ea5; --accent-soft:#eef3f8; --trunk:#2e7d52; --trunk-soft:#e7f3ec;
+    --warn:#b4541f; --warn-soft:#fbeee5; --ok:#2e7d52; --bad:#b4292f;
+  }
+  *{box-sizing:border-box}
+  body{font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:48px 20px}
+  .wrap{max-width:760px; margin:0 auto}
+  header{border-bottom:3px solid var(--ink); padding-bottom:18px}
+  .kicker{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0}
+  h1{font-size:33px; margin:8px 0 6px; letter-spacing:-.015em; line-height:1.15}
+  .goal{background:var(--accent-soft); border-left:4px solid var(--accent); padding:12px 16px; margin:18px 0 0; border-radius:0 8px 8px 0; font-size:15px}
+  .goal b{color:var(--accent)}
+  h2{font-size:23px; margin:44px 0 6px; letter-spacing:-.01em}
+  h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:8px}
+  p{margin:14px 0}
+  .lead{font-size:19px}
+  a{color:var(--accent)}
+  sup a{text-decoration:none; font-weight:700; font-size:12px; padding:0 1px}
+  code{background:#efece4; padding:1.5px 5px; border-radius:5px; font-size:14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin:20px 0}
+  .callout{background:var(--warn-soft); border-left:4px solid var(--warn); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .callout b{color:var(--warn)}
+  .you{background:var(--trunk-soft); border-left:4px solid var(--trunk); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .you b{color:var(--trunk)}
+  ul{margin:14px 0; padding-left:22px} li{margin:7px 0}
+  figure{margin:26px 0; text-align:center}
+  figcaption{font-size:13px; color:var(--muted); margin-top:10px}
+
+  /* three-signal band */
+  .signals{display:flex; gap:12px; flex-wrap:wrap; margin:22px 0}
+  .sig{flex:1 1 200px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+  .sig .h{font-weight:800; color:var(--accent); font-size:15px}
+  .sig .b{font-size:14px; color:#333; margin-top:5px}
+  .sig.surface{border-color:var(--trunk); }
+  .sig.surface .h{color:var(--trunk)}
+
+  /* checklist */
+  .check{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:6px 22px 18px; margin:24px 0}
+  .check h3{font-size:15px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:18px 0 6px}
+  .item{display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer}
+  .item:last-child{border-bottom:none}
+  .box{flex:0 0 22px; width:22px; height:22px; border:2px solid var(--accent); border-radius:6px; margin-top:2px; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; transition:.12s}
+  .item.on .box{background:var(--accent)}
+  .item .box::after{content:"✓"; opacity:0; font-size:14px}
+  .item.on .box::after{opacity:1}
+  .item .t{flex:1}
+  .item .t b{display:block}
+  .item .t span{font-size:14px; color:var(--muted)}
+  .item.on .t b{text-decoration:line-through; text-decoration-color:#bbb}
+  .progress{font-weight:600; text-align:center; color:var(--muted); margin:14px 0 2px; font-size:14px}
+
+  /* scenario review widget */
+  .triage{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 22px 20px; margin:26px 0}
+  .triage h3{font-size:15px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:18px 0 4px}
+  .pr{border:1px solid var(--line); border-radius:11px; padding:14px 16px; margin:16px 0}
+  .pr .title{font-weight:700; font-size:16px}
+  .pr .meta{font-size:13.5px; color:#333; margin:5px 0 4px}
+  .pr .meta em{color:var(--muted)}
+  .btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+  .tbtn{flex:1 1 45%; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:9px 10px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:.12s}
+  .tbtn:hover{border-color:var(--accent)}
+  .tbtn:disabled{cursor:default; opacity:.85}
+  .tbtn.picked-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .tbtn.picked-wrong{border-color:var(--bad); background:#fbecec; color:#7d2025}
+  .tbtn.reveal-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .verdict{font-size:14.5px; margin-top:12px; padding:11px 14px; border-radius:8px; display:none; background:var(--accent-soft); color:#234}
+  .verdict.show{display:block}
+  .tprog{font-weight:600; text-align:center; color:var(--muted); margin:8px 0 2px; font-size:14px}
+
+  /* quiz */
+  .quiz{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 24px 24px; margin:28px 0}
+  .q{padding:20px 0; border-bottom:1px solid var(--line)} .q:last-child{border-bottom:none}
+  .q p.qtext{font-weight:600; margin:6px 0 14px}
+  .opt{display:block; width:100%; text-align:left; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:11px 14px; margin:8px 0; font:inherit; font-size:15px; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--ok); background:#eaf5ee}
+  .opt.wrong{border-color:var(--bad); background:#fbecec}
+  .opt:disabled{cursor:default}
+  .fb{font-size:14.5px; margin-top:10px; padding:11px 14px; border-radius:8px; display:none}
+  .fb.show{display:block}
+  .fb.good{background:#eaf5ee; color:#1f5c3a}
+  .fb.bad{background:#fbecec; color:#7d2025}
+  .score{font-size:15px; font-weight:600; margin-top:18px; text-align:center; color:var(--muted)}
+
+  .ask{margin-top:40px; background:#1a1a1a; color:#f3efe6; border-radius:14px; padding:22px 24px}
+  .ask b{color:#fff}
+  footer{margin-top:30px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  footer ol{padding-left:20px; margin:8px 0} footer a{color:var(--accent)}
+  @media print{ body{background:#fff;padding:0} .quiz,.ask,.check,.triage{break-inside:avoid} .opt,.item,.tbtn{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Lesson 4 · Trunk-Based Development</p>
+    <h1>The Preview Deploy as Your Review Surface</h1>
+    <div class="goal"><b>By the end of this lesson</b> you'll treat each PR's preview URL — not just the diff — as where you actually review, and you'll have a repeatable checklist of what to <em>do</em> on that URL before you approve.</div>
+  </header>
+
+  <p class="lead">In Lesson 3 you learned to judge a PR's <em>shape</em> on sight. Now you open it. A reviewable PR gives you three things to look at — and the one most reviewers skip is the one that catches what code-reading can't: the change <b>running</b>, on its own live URL.</p>
+
+  <h2><span class="n">1</span>Three signals, not one</h2>
+  <p>Every PR onto your protected trunk arrives with three independent signals. Approving means all three are green — and they tell you <em>different</em> things:</p>
+  <div class="signals">
+    <div class="sig"><div class="h">✓ CI checks</div><div class="b">It <em>builds</em> and the tests pass. Proves the code is internally consistent — not that it does the right thing.</div></div>
+    <div class="sig"><div class="h">✓ The diff</div><div class="b">You read <em>how</em> it's built (Lesson 3's S·S·S). Proves the approach is sound — not that it works for a user.</div></div>
+    <div class="sig surface"><div class="h">✓ The preview deploy</div><div class="b">You drive the change <em>running</em>. Proves it actually <em>behaves</em> — the half the other two can't show you.</div></div>
+  </div>
+  <div class="callout"><b>Why this matters double with AI committers:</b> an agent's diff can look clean and its tests can pass while the actual experience is wrong — a button that does nothing, a broken empty state, a layout that collapses on mobile. Tests check what someone thought to assert; the preview shows you what's really there. For work you're personally signing off on, "I read the diff" is not the same as "I saw it work."</div>
+
+  <h2><span class="n">2</span>What a preview deploy actually is</h2>
+  <p>On a Vercel/Netlify-style host, you don't set this up per PR — it's automatic. Vercel creates a <b>preview deployment</b> whenever you push to any non-production branch or open a PR.<sup><a href="#r1">1</a></sup> Each one is:</p>
+  <ul>
+    <li><b>Its own live URL.</b> A real, running copy of the whole app with this PR's changes — not your machine, not production. The branch URL always points to the branch's latest commit, so it updates on every push.<sup><a href="#r1">1</a></sup></li>
+    <li><b>Isolated from production.</b> A separate environment with its own environment variables (e.g. a test database), so nothing you click can touch real users or real data.<sup><a href="#r1">1</a></sup></li>
+    <li><b>Linked right on the PR.</b> The host posts the preview URL and its build status as a comment/check on the GitHub PR, so it's one click from the diff you're already reading.<sup><a href="#r1">1</a></sup></li>
+  </ul>
+  <figure>
+  <svg viewBox="0 0 680 210" xmlns="http://www.w3.org/2000/svg" width="100%" role="img" aria-label="A PR producing a preview deployment with its own URL, separate from production">
+    <defs><marker id="a" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5b5b5b"/></marker></defs>
+    <g font-family="sans-serif" font-size="12" text-anchor="middle">
+      <rect x="20" y="80" width="130" height="48" rx="9" fill="#eef3f8" stroke="#3a6ea5"/>
+      <text x="85" y="100" fill="#3a6ea5" font-weight="700">PR #42</text>
+      <text x="85" y="117" fill="#3a6ea5" font-size="11">push to branch</text>
+      <line x1="150" y1="104" x2="235" y2="104" stroke="#5b5b5b" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="192" y="96" font-size="10" fill="#5b5b5b">auto</text>
+      <rect x="240" y="74" width="170" height="60" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+      <text x="325" y="96" font-weight="700" fill="#1a1a1a">PREVIEW DEPLOY</text>
+      <text x="325" y="113" font-size="10.5" fill="#5b5b5b">pr-42.app.vercel.app</text>
+      <text x="325" y="127" font-size="10.5" fill="#5b5b5b">isolated env · own data</text>
+      <line x1="325" y1="74" x2="325" y2="40" stroke="#5b5b5b" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="325" y="30" font-size="11" fill="#5b5b5b">you review here 👁</text>
+      <!-- production kept separate -->
+      <line x1="180" y1="155" x2="180" y2="128" stroke="#bbb" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <line x1="500" y1="40" x2="500" y2="180" stroke="#2e7d52" stroke-width="6"/>
+      <text x="560" y="105" fill="#2e7d52" font-weight="700">production</text>
+      <text x="560" y="122" font-size="10.5" fill="#2e7d52">untouched until merge</text>
+    </g>
+  </svg>
+  <figcaption>A push to the PR's branch auto-builds a preview at its own URL, fully isolated from production. You review the running change there; production only changes when the PR merges to <code>main</code>.<sup><a href="#r1">1</a></sup></figcaption>
+  </figure>
+
+  <h2><span class="n">3</span>What to actually do on the preview URL</h2>
+  <p>Open the preview and work this list. It's short on purpose — you're confirming behavior, not auditing the whole app. Tick each as you reason through it:</p>
+  <div class="check" id="check">
+    <h3>Preview review checklist</h3>
+    <div class="item" data-id="1"><div class="box"></div><div class="t"><b>Does the thing the PR claims to do?</b><span>Use the description's "what to check" line (Lesson 3's self-describing property). Walk that exact path on the preview and confirm the stated outcome happens.</span></div></div>
+    <div class="item" data-id="2"><div class="box"></div><div class="t"><b>Happy path, end to end</b><span>The normal user flow for this feature works start to finish — not just the one screen in the screenshot.</span></div></div>
+    <div class="item" data-id="3"><div class="box"></div><div class="t"><b>Edge &amp; empty &amp; error states</b><span>Empty list, bad input, the failure case. This is where agent-written UIs most often fall down, and where tests are thinnest.</span></div></div>
+    <div class="item" data-id="4"><div class="box"></div><div class="t"><b>Nothing obviously regressed nearby</b><span>Click the screens next to the change. A single-purpose PR (Lesson 3) makes "nearby" small — that's the payoff.</span></div></div>
+    <div class="item" data-id="5"><div class="box"></div><div class="t"><b>A quick look on mobile width</b><span>Narrow the window or use the device toolbar. Layout shouldn't collapse.</span></div></div>
+    <div class="item" data-id="6"><div class="box"></div><div class="t"><b>Hidden work stays hidden</b><span>If part of this PR is behind a <b>feature flag</b>, confirm it's <em>off</em> on the preview as users would see it. (Flags are how incomplete work rides on trunk safely — that's Lesson 6.)</span></div></div>
+    <div class="progress" id="prog">0 / 6 reasoned through</div>
+  </div>
+  <div class="you"><b>Your move as reviewer:</b> the preview turns "approve / request changes" from a guess into an observation. If the preview is wrong, you <em>request changes</em> or send it back — you don't approve a clean diff whose behavior you never saw. Green CI + sound diff + a preview you actually drove = the bar for merging to a trunk you keep releasable.</div>
+
+  <h2><span class="n">4</span>Practice: you've opened the preview</h2>
+  <p>For each PR you've already triaged as reviewable, you open its preview URL and see the following. Decide: <b>Approve &amp; merge</b>, or <b>Request changes</b>?</p>
+  <div class="triage" id="triage">
+    <div class="pr" data-correct="approve">
+      <div class="title">Add “forgot password” email endpoint</div>
+      <div class="meta">CI ✓ green · diff looks clean. <em>On the preview:</em> you submit your email at /login → “Forgot password”, get the “check your inbox” confirmation, the reset email arrives in the test inbox, and an unknown email shows a friendly “if that account exists…” message.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="approve">Approve &amp; merge</button>
+        <button class="tbtn" data-k="changes">Request changes</button>
+      </div>
+      <div class="verdict">✅ <b>Approve.</b> All three signals are green and you <em>saw</em> the happy path, the email, and the empty/unknown case behave. That's a real review, not a guess.</div>
+    </div>
+
+    <div class="pr" data-correct="changes">
+      <div class="title">New dashboard empty state</div>
+      <div class="meta">CI ✓ green · diff looks clean and small. <em>On the preview:</em> a brand-new account (no data yet) shows a blank white panel with a console error, instead of the “Add your first project” prompt the PR describes.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="approve">Approve &amp; merge</button>
+        <button class="tbtn" data-k="changes">Request changes</button>
+      </div>
+      <div class="verdict">✅ <b>Request changes.</b> This is the whole lesson: CI passed and the diff read fine, but the running change is broken in exactly the case it was built for. Only the preview showed it. Never reachable from the diff alone.</div>
+    </div>
+
+    <div class="pr" data-correct="changes">
+      <div class="title">Pricing page redesign</div>
+      <div class="meta">CI ✓ green · diff looks clean. <em>On the preview:</em> looks great on desktop, but at mobile width the three pricing cards overlap and the “Subscribe” button is pushed off-screen.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="approve">Approve &amp; merge</button>
+        <button class="tbtn" data-k="changes">Request changes</button>
+      </div>
+      <div class="verdict">✅ <b>Request changes.</b> The conversion button is unreachable for mobile users — a real regression a desktop-only glance would miss. The 30-second mobile check on the preview is what caught it.</div>
+    </div>
+  </div>
+
+  <h2><span class="n">5</span>Check yourself</h2>
+  <div class="quiz" id="quiz">
+    <div class="q" data-correct="c">
+      <p class="qtext">1. A PR's CI is green and you've read the diff — it's small and the approach is sound. Why isn't that enough to approve?</p>
+      <button class="opt" data-k="a">It is enough — CI plus a clean diff fully covers a review.</button>
+      <button class="opt" data-k="b">You also need a second human approver.</button>
+      <button class="opt" data-k="c">CI proves it builds and passes the tests someone wrote; the diff proves the approach — neither proves the change actually <em>behaves</em> for a user. The preview is the only signal that shows that.</button>
+      <div class="fb good">Right. Three independent signals, three different proofs. The preview is where you see the running change — the part code-reading and tests can't guarantee.</div>
+      <div class="fb bad">Re-read §1. Tests only check what someone thought to assert, and a diff shows intent, not behavior. The third signal — driving the change on its preview URL — is what proves it actually works.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">2. You click a PR's preview URL, sign up a fake account, and delete some records to test the empty state. Safe?</p>
+      <button class="opt" data-k="a">No — you're operating on production data and could affect real users.</button>
+      <button class="opt" data-k="b">Yes — a preview is an isolated environment with its own (non-production) data, so clicking around can't touch real users.</button>
+      <button class="opt" data-k="c">Only if you first take a production backup.</button>
+      <div class="fb good">Exactly. That isolation is the point — the preview is a throwaway, production-separate environment, so you can poke at edge and error states freely.</div>
+      <div class="fb bad">Re-read §2. A preview deploy runs in its <b>own isolated environment</b> with its own env vars/data, separate from production. That's precisely why you can test destructive edge cases on it safely.</div>
+    </div>
+
+    <div class="q" data-correct="a">
+      <p class="qtext">3. The preview for a small, clean-diff PR shows the feature's main button doing nothing when clicked. CI is green. What do you do?</p>
+      <button class="opt" data-k="a">Request changes / send it back — a green diff whose behavior is broken does not get merged to a trunk you keep releasable.</button>
+      <button class="opt" data-k="b">Approve — CI is green, so the button issue must be a preview glitch.</button>
+      <button class="opt" data-k="c">Approve and file a follow-up ticket to fix the button later.</button>
+      <div class="fb good">Yes. The preview just earned its keep. Behavior beats a green checkmark; you withhold approval until the running change is right.</div>
+      <div class="fb bad">Re-read §3's reviewer note. The preview is your behavior signal — when it's wrong, you request changes. Approving broken behavior (or merging it "to fix later") puts a known-bad change on your releasable trunk.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">4. Part of a PR is incomplete work hidden behind a feature flag. On the preview, what should you confirm about it?</p>
+      <button class="opt" data-k="a">That the incomplete feature is fully working before merging.</button>
+      <button class="opt" data-k="b">That the flag is <em>off</em> in the preview as users would see it — the hidden work stays hidden — so the finished parts can merge safely now.</button>
+      <button class="opt" data-k="c">That feature flags aren't allowed in PRs at all.</button>
+      <div class="fb good">Right. A flag lets unfinished work ride on trunk without exposing it. Your preview check is that it's genuinely hidden in the default state. (Full treatment in Lesson 6.)</div>
+      <div class="fb bad">Re-read checklist item 6. The whole point of a flag is that incomplete work can merge while staying hidden — so you confirm it's <b>off</b> by default on the preview, not that it's finished.</div>
+    </div>
+    <div class="score" id="score">Answer the questions above to see your score.</div>
+  </div>
+
+  <div class="ask">
+    <b>Ask your teacher.</b> Good follow-ups from here:
+    <ul style="margin:10px 0 0">
+      <li>"What should I tell my agent to put in a PR description so the preview is easy to check?"</li>
+      <li>"How do preview env vars / test databases get set up so I can click freely?"</li>
+      <li>"When is a quick preview look enough vs. when should I test harder?"</li>
+      <li>"Ready for Lesson 5 — how do releases work once a PR merges to trunk?"</li>
+    </ul>
+  </div>
+
+  <footer>
+    <b>Sources</b> (fetched &amp; verified 2026-06-09):
+    <ol>
+      <li id="r1"><a href="https://vercel.com/docs/deployments/environments">Environments &amp; Preview Deployments</a> — Vercel Docs (auto preview on every non-prod branch push / PR; unique generated URL updated per commit; isolated environment with its own variables; URL surfaced in the Git provider's PR comments). Netlify equivalent: <a href="https://docs.netlify.com/site-deploys/deploy-previews/">Deploy Previews</a>.</li>
+    </ol>
+    See <code>reference/glossary.html</code> for terms · builds on Lesson 3's reviewable-PR rubric.
+  </footer>
+</div>
+
+<script>
+  // checklist
+  const items = document.querySelectorAll('#check .item');
+  const prog = document.getElementById('prog');
+  items.forEach(it => it.addEventListener('click', () => {
+    it.classList.toggle('on');
+    const done = document.querySelectorAll('#check .item.on').length;
+    prog.textContent = done + ' / ' + items.length + ' reasoned through' + (done === items.length ? ' — that\'s your preview pass ✓' : '');
+  }));
+  // scenario review
+  const prs = document.querySelectorAll('#triage .pr');
+  const tprog = document.getElementById('tprog');
+  let triaged = 0, tright = 0;
+  prs.forEach(pr => {
+    const key = pr.dataset.correct;
+    const btns = pr.querySelectorAll('.tbtn');
+    const verdict = pr.querySelector('.verdict');
+    btns.forEach(b => b.addEventListener('click', () => {
+      if (pr.dataset.done) return; pr.dataset.done = '1'; triaged++;
+      const right = b.dataset.k === key; if (right) tright++;
+      btns.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add(o === b ? 'picked-right' : 'reveal-right');
+        else if (o === b) o.classList.add('picked-wrong'); });
+      verdict.classList.add('show');
+    }));
+  });
+  // quiz
+  let answered = 0, correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    const key = q.dataset.correct;
+    const opts = q.querySelectorAll('.opt');
+    const good = q.querySelector('.fb.good'), bad = q.querySelector('.fb.bad');
+    opts.forEach(opt => opt.addEventListener('click', () => {
+      if (q.dataset.done) return; q.dataset.done = '1'; answered++;
+      const right = opt.dataset.k === key; if (right) correct++;
+      opts.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add('correct');
+        else if (o === opt) o.classList.add('wrong'); });
+      (right ? good : bad).classList.add('show');
+      document.getElementById('score').textContent = correct + ' / ' + answered + ' so far' +
+        (answered === 4 ? (correct === 4 ? ' — you review what runs, not just what reads. Ready for Lesson 5.' : ' — check the highlighted answers, then ask me anything.') : '');
+    }));
+  });
+</script>
+</body>
+</html>

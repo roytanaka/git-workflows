@@ -62,8 +62,11 @@
     <dd>A proposal to merge a branch into the trunk, paired with a diff for review and automated checks. In your setup, this is where an AI agent's work lands for you to review before it touches <code>main</code>.</dd>
 
     <dt>Preview deployment <span class="tag">practice</span></dt>
-    <dd>A live, throwaway deployment automatically built from a branch or PR, with its own URL — so you can <em>see</em> the change running before merging. Created on every non-production push or PR.
+    <dd>A live, throwaway deployment automatically built from a branch or PR, with its own URL — so you can <em>see</em> the change running before merging. Created on every non-production push or PR, isolated from production (own environment variables/data), and surfaced as a link on the PR. Your primary review surface.
       <div class="x"><a href="https://vercel.com/docs/deployments/environments">Vercel — Environments</a> · <a href="https://docs.netlify.com/site-deploys/deploy-previews/">Netlify — Deploy Previews</a></div></dd>
+
+    <dt>The three review signals <span class="tag">review</span></dt>
+    <dd>What you confirm before approving a PR: <strong>CI checks</strong> (it builds + tests pass — internal consistency), <strong>the diff</strong> (how it's built — the approach), and <strong>the preview deploy</strong> (the change actually <em>behaves</em> for a user). All three are independent; the preview is the one most often skipped and the only one that proves behavior.</dd>
 
     <dt>Releasable / "green" trunk <span class="tag">core</span></dt>
     <dd>The state TBD protects: the trunk could be deployed to production at any moment without breaking. Nothing half-finished is ever visible on it.</dd>

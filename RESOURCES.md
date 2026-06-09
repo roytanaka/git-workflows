@@ -16,6 +16,16 @@ All URLs below were fetched and verified live on 2026-06-09.
   The practice TBD operationalizes: everyone integrates to mainline at least daily, automated self-testing build. Use for: *why* branches must stay short.
 - [Feature Toggles (a.k.a. Feature Flags) — Pete Hodgson, on martinfowler.com](https://martinfowler.com/articles/feature-toggles.html)
   Canonical taxonomy (release, experiment, ops, permissioning toggles) and managing toggle debt. The mechanism for hiding incomplete work on trunk. Use for: the releases/flags lessons.
+
+### Feature-flag tooling (for Lesson 6)
+- [PostHog — Feature flags docs](https://posthog.com/docs/feature-flags) & [pricing](https://posthog.com/pricing)
+  All-in-one: flags + product analytics + session replay + experiments. Supports boolean release toggles, % rollout, user/group targeting, kill-switches, server-side local evaluation, client bootstrap (no flicker). ~1M flag requests/mo free; open-source/self-host (MIT) escape hatch; SDKs for most languages. **Recommended concrete example for the flags lesson** — best single-tool bet for a greenfield SaaS.
+- [Vercel Flags SDK](https://vercel.com/docs/flags) ([flags-sdk.dev](https://flags-sdk.dev/))
+  Free, open-source, *provider-agnostic* "flags as code" library; framework-native for Next.js; flags evaluated server-side; can use PostHog as its backing provider. Use for: the lightest option on a Vercel stack, and to show flags aren't necessarily a separate vendor.
+- [Feature flags in AI-generated code — LeadWise](https://www.leadwise.pro/en/blog/statsig-posthog-and-launchdarkly-feature-flag-choices-in-ai-generated-code)
+  **Most mission-relevant flags source.** Argues AI agents default to a vendor SDK even when an env-var/config toggle would do; the fix is a thin team-owned `FlagClient` wrapper ("put this behind our FlagClient") plus a cleanup discipline (every flag needs an owner + removal date). Use for: the director's judgment angle of the flags lesson.
+- [Best feature-flag software, compared — PostHog](https://posthog.com/blog/best-feature-flag-software-for-developers)
+  Landscape survey: PostHog / Vercel / LaunchDarkly (enterprise/governance) / GrowthBook + Unleash (OSS self-host) / Statsig (unlimited free flags, now OpenAI-owned). Use for: framing the options and when *not* to reach for a vendor.
 - [Vercel — Environments & Preview Deployments](https://vercel.com/docs/deployments/environments)
   How a push to a non-production branch or a PR auto-creates a preview deployment with its own URL. Use for: the preview-deploy-as-review-surface lesson. (Netlify equivalent: [Deploy Previews](https://docs.netlify.com/site-deploys/deploy-previews/).)
 - [GitHub — About protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)

@@ -17,7 +17,7 @@
 1. ✅ The Trunk and the Loop — core mental model (lesson 0001)
 2. ✅ Protecting the Trunk for Parallel Agents — day-one branch protection + merge queue + logical conflicts (lesson 0002)
 3. ✅ The Reviewable Pull Request — S·S·S (small/single-purpose/self-describing), the Cisco review ceiling, triage (review/split/send-back), scoping the brief, and slicing work across agents (lesson 0003).
-4. Preview deploys as the review surface — what to check on each PR's preview URL.
+4. ✅ The Preview Deploy as Your Review Surface — three review signals (CI / diff / preview), what a preview is, and a checklist of what to do on the preview URL before approving (lesson 0004). One-line feature-flag mention seeded here (checklist item 6).
 5. Releases in continuously-deployed web apps — release-from-trunk vs release branches; pick one.
-6. Feature flags — hiding incomplete work on trunk instead of long-lived branches.
+6. Feature flags — hiding incomplete work on trunk instead of long-lived branches. **Plan locked (see learning-record 0003):** teach the vendor-agnostic judgment (own a thin `FlagClient` wrapper + flag-debt discipline: owner + removal date), use **PostHog** as the concrete example, mention env-var / Vercel Flags SDK / LaunchDarkly / GrowthBook+Unleash / Statsig so learner knows when *not* to reach for a vendor.
 7. Hotfixes — fix-forward vs cherry-pick onto a release branch.
