@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "WebFetch(domain:trunkbaseddevelopment.com)",
-      "WebFetch(domain:dora.dev)",
-      "WebFetch(domain:docs.github.com)"
-    ]
-  }
-}
