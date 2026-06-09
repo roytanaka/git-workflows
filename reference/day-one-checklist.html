@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day-One Repo Setup — TBD Checklist</title>
+<style>
+  :root{--ink:#1a1a1a;--muted:#5b5b5b;--line:#e3e0d8;--bg:#faf8f3;--accent:#3a6ea5;--trunk:#2e7d52}
+  *{box-sizing:border-box}
+  body{font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);margin:0;padding:42px 20px}
+  .wrap{max-width:720px;margin:0 auto}
+  header{border-bottom:3px solid var(--ink);padding-bottom:14px}
+  .kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0}
+  h1{font-size:26px;margin:6px 0 0}
+  .sub{color:var(--muted);font-size:13px;margin:8px 0 0}
+  h2{font-size:14px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin:30px 0 4px;border-bottom:1px solid var(--line);padding-bottom:5px}
+  ul{list-style:none;padding:0;margin:10px 0}
+  li{display:flex;gap:11px;padding:9px 0;align-items:flex-start;border-bottom:1px solid #efece4}
+  li:last-child{border:none}
+  .b{flex:0 0 18px;width:18px;height:18px;border:2px solid var(--accent);border-radius:4px;margin-top:2px}
+  .t b{display:block;font-size:15px}
+  .t span{font-size:13px;color:var(--muted)}
+  code{background:#efece4;padding:1px 5px;border-radius:4px;font-size:13px}
+  .why{background:#fff;border:1px solid var(--line);border-left:4px solid var(--trunk);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;font-size:13.5px}
+  footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+  footer a{color:var(--accent)}
+  @media print{body{background:#fff;padding:0}.why{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Reference · Git Workflows</p>
+    <h1>Day-One Repo Setup — TBD Checklist</h1>
+    <p class="sub">Do this once, before any feature code exists. It makes a trunk that many AI agents can target in parallel without breaking production. From Lesson 2.</p>
+  </header>
+
+  <h2>1 · Repository basics</h2>
+  <ul>
+    <li><div class="b"></div><div class="t"><b>Trunk branch is <code>main</code></b><span>One shared mainline. This is the trunk.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Enable "Automatically delete head branches"</b><span>Repo → Settings → General. Merged branches vanish (loop step ⑥).</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Choose squash-merge as the default (recommended)</b><span>One PR = one tidy commit on <code>main</code>; keeps trunk history readable and easy to revert.</span></div></li>
+  </ul>
+
+  <h2>2 · Protect <code>main</code> (ruleset or branch protection)</h2>
+  <ul>
+    <li><div class="b"></div><div class="t"><b>Require a pull request before merging</b><span>No direct pushes. Every change — every agent — arrives as a PR.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Require status checks to pass</b><span>CI build + tests green before merge. Keeps the trunk others branch from green.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Require branches to be up to date before merging</b><span>PR must include latest <code>main</code> and be re-tested against it.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Require 1 approving review</b><span>The human gate — that approver is you.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Require conversation resolution</b><span>Your review comments can't be silently ignored.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Block force-pushes &amp; deletions; no bypass</b><span>Rules apply to admins and bots too.</span></div></li>
+  </ul>
+
+  <h2>3 · CI (the checks you'll require)</h2>
+  <ul>
+    <li><div class="b"></div><div class="t"><b>Build passes</b><span>The app compiles / bundles.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Automated tests pass</b><span>Self-testing build — the proof the trunk still works.</span></div></li>
+    <li><div class="b"></div><div class="t"><b>Lint / typecheck</b><span>Cheap, catches whole classes of agent mistakes before your review.</span></div></li>
+  </ul>
+
+  <h2>4 · Preview deploys</h2>
+  <ul>
+    <li><div class="b"></div><div class="t"><b>Connect host (Vercel/Netlify) to the repo</b><span>Auto preview deployment per PR — your review surface (Lesson 4).</span></div></li>
+  </ul>
+
+  <h2>5 · Turn on later, when PR volume grows</h2>
+  <ul>
+    <li><div class="b"></div><div class="t"><b>Merge queue</b><span>When several agents merge several PRs per day. Re-tests PRs <em>combined</em> against latest <code>main</code> — catches logical conflicts. A toggle in the same ruleset; no rework to add later.</span></div></li>
+  </ul>
+
+  <div class="why"><b>Why day one?</b> Once code and agents exist, retrofitting rules means fighting habits and history. Set the gate before the first PR and the entire workflow is correct "out of the gate" — every future change is funneled through one reviewed, tested doorway, no matter how many agents push at once.</div>
+
+  <footer>
+    Sources verified 2026-06-09 — <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches">GitHub: protected branches</a>, <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue">merge queue</a>. See <code>RESOURCES.md</code>.
+  </footer>
+</div>
+</body>
+</html>

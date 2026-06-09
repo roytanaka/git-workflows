@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2 · Protecting the Trunk for Parallel Agents</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b5b5b; --line:#e3e0d8; --bg:#faf8f3; --card:#fff;
+    --accent:#3a6ea5; --accent-soft:#eef3f8; --trunk:#2e7d52; --trunk-soft:#e7f3ec;
+    --warn:#b4541f; --warn-soft:#fbeee5; --ok:#2e7d52; --bad:#b4292f;
+    --a1:#3a6ea5; --a2:#8a4fb0; --a3:#b4541f;
+  }
+  *{box-sizing:border-box}
+  body{font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:48px 20px}
+  .wrap{max-width:760px; margin:0 auto}
+  header{border-bottom:3px solid var(--ink); padding-bottom:18px}
+  .kicker{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0}
+  h1{font-size:33px; margin:8px 0 6px; letter-spacing:-.015em; line-height:1.15}
+  .goal{background:var(--accent-soft); border-left:4px solid var(--accent); padding:12px 16px; margin:18px 0 0; border-radius:0 8px 8px 0; font-size:15px}
+  .goal b{color:var(--accent)}
+  h2{font-size:23px; margin:44px 0 6px; letter-spacing:-.01em}
+  h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:8px}
+  p{margin:14px 0}
+  .lead{font-size:19px}
+  a{color:var(--accent)}
+  sup a{text-decoration:none; font-weight:700; font-size:12px; padding:0 1px}
+  code{background:#efece4; padding:1.5px 5px; border-radius:5px; font-size:14px}
+  .trunk-word{color:var(--trunk); font-weight:700}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin:20px 0}
+  .callout{background:var(--warn-soft); border-left:4px solid var(--warn); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .callout b{color:var(--warn)}
+  .you{background:var(--trunk-soft); border-left:4px solid var(--trunk); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .you b{color:var(--trunk)}
+  ul{margin:14px 0; padding-left:22px} li{margin:7px 0}
+  figure{margin:26px 0; text-align:center}
+  figcaption{font-size:13px; color:var(--muted); margin-top:10px}
+
+  /* checklist */
+  .check{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:6px 22px 18px; margin:24px 0}
+  .check h3{font-size:15px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:18px 0 6px}
+  .item{display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer}
+  .item:last-child{border-bottom:none}
+  .box{flex:0 0 22px; width:22px; height:22px; border:2px solid var(--accent); border-radius:6px; margin-top:2px; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; transition:.12s}
+  .item.on .box{background:var(--accent)}
+  .item .box::after{content:"✓"; opacity:0; font-size:14px}
+  .item.on .box::after{opacity:1}
+  .item .t{flex:1}
+  .item .t b{display:block}
+  .item .t span{font-size:14px; color:var(--muted)}
+  .item.on .t b{text-decoration:line-through; text-decoration-color:#bbb}
+  .progress{font-weight:600; text-align:center; color:var(--muted); margin:14px 0 2px; font-size:14px}
+
+  /* quiz */
+  .quiz{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 24px 24px; margin:28px 0}
+  .q{padding:20px 0; border-bottom:1px solid var(--line)} .q:last-child{border-bottom:none}
+  .q p.qtext{font-weight:600; margin:6px 0 14px}
+  .opt{display:block; width:100%; text-align:left; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:11px 14px; margin:8px 0; font:inherit; font-size:15px; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--ok); background:#eaf5ee}
+  .opt.wrong{border-color:var(--bad); background:#fbecec}
+  .opt:disabled{cursor:default}
+  .fb{font-size:14.5px; margin-top:10px; padding:11px 14px; border-radius:8px; display:none}
+  .fb.show{display:block}
+  .fb.good{background:#eaf5ee; color:#1f5c3a}
+  .fb.bad{background:#fbecec; color:#7d2025}
+  .score{font-size:15px; font-weight:600; margin-top:18px; text-align:center; color:var(--muted)}
+
+  .ask{margin-top:40px; background:#1a1a1a; color:#f3efe6; border-radius:14px; padding:22px 24px}
+  .ask b{color:#fff}
+  footer{margin-top:30px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  footer ol{padding-left:20px; margin:8px 0} footer a{color:var(--accent)}
+  @media print{ body{background:#fff;padding:0} .quiz,.ask,.check{break-inside:avoid} .opt,.item{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Lesson 2 · Trunk-Based Development</p>
+    <h1>Protecting the Trunk for Parallel Agents</h1>
+    <div class="goal"><b>By the end of this lesson</b> you'll know the exact day-one settings that let several AI agents open several PRs in a single day without breaking <code>main</code> — and you'll understand the one subtle failure (the <em>logical conflict</em>) that a merge queue exists to stop.</div>
+  </header>
+
+  <p class="lead">In Lesson 1 you ran the loop once. Now run it <b>three times at once.</b> Three agents, three features, three short-lived branches, all aiming at the same <code>main</code> in the same day. TBD is <em>built</em> for this — but only if the trunk is protected. An unprotected trunk plus concurrency is exactly how "loose Git" produces a broken production.</p>
+
+  <h2><span class="n">1</span>The scenario, and what goes wrong unprotected</h2>
+  <p>Picture your greenfield repo with no rules on <code>main</code>:</p>
+  <ul>
+    <li>Agent A pushes <em>straight to <code>main</code></em> — no review, no preview, no CI gate. A half-finished change is now in your releasable trunk. Rule broken on day one.</li>
+    <li>Agent B's tests never had to pass before landing. <code>main</code> goes red; now Agent C branches <em>off a broken trunk</em> and inherits the breakage.</li>
+    <li>Two agents force-push and one silently overwrites the other's commits.</li>
+  </ul>
+  <p>None of this is a Git flaw — it's the <em>absence of a gate</em>. The fix is a one-time configuration you do before any code exists: <b>branch protection</b> on <code>main</code>.<sup><a href="#r1">1</a></sup></p>
+
+  <h2><span class="n">2</span>The gate: branch protection on <code>main</code></h2>
+  <p>Branch protection turns <code>main</code> from "anyone can push anything" into "the only way in is a reviewed, tested PR." On GitHub you set this with a <b>ruleset</b> (the modern form of branch protection rules<sup><a href="#r2">2</a></sup>). Here's your day-one checklist — tick them off as you reason through each:</p>
+
+  <div class="check" id="check">
+    <h3>Day-one protection for <code>main</code></h3>
+    <div class="item" data-id="1"><div class="box"></div><div class="t"><b>Require a pull request before merging</b><span>No direct pushes to <code>main</code>. Every change — including every agent's — must arrive as a PR. This alone restores the loop.</span></div></div>
+    <div class="item" data-id="2"><div class="box"></div><div class="t"><b>Require status checks to pass</b><span>CI (build + tests) must be green before merge. A red branch can't poison the trunk that others branch from.<sup><a href="#r1">1</a></sup></span></div></div>
+    <div class="item" data-id="3"><div class="box"></div><div class="t"><b>Require branches to be up to date before merging</b><span>A PR must include the latest <code>main</code> before it can merge — so it was tested against what it's actually merging into, not a stale snapshot.</span></div></div>
+    <div class="item" data-id="4"><div class="box"></div><div class="t"><b>Require 1 approving review</b><span>That approver is <em>you</em>. This is the human gate from Lesson 1, encoded as a rule the agents can't skip.</span></div></div>
+    <div class="item" data-id="5"><div class="box"></div><div class="t"><b>Require conversation resolution</b><span>If you leave a review comment, it must be resolved before merge — your feedback can't be silently ignored.</span></div></div>
+    <div class="item" data-id="6"><div class="box"></div><div class="t"><b>Do not allow bypassing / no force-push / no deletion</b><span>The rules apply to everyone, including admins and bots. No agent can force-push over <code>main</code> or delete it.</span></div></div>
+    <div class="item" data-id="7"><div class="box"></div><div class="t"><b>Auto-delete head branches after merge</b><span>(Repo setting.) Step ⑥ of the loop, automated — merged branches vanish so they can't drift or pile up.</span></div></div>
+    <div class="progress" id="prog">0 / 7 reasoned through</div>
+  </div>
+  <p>That's the whole gate. Notice what it does to your concurrency problem: with this in place, <em>it doesn't matter</em> how many agents push at once — every change is funneled through the same reviewed, tested doorway, single-file.</p>
+
+  <h2><span class="n">3</span>Parallel branches aren't a TBD violation — they <em>are</em> TBD</h2>
+  <p>A natural worry: "Lesson 1 said keep active branches low — DORA's marker was ≤3. Doesn't running three agents break that?" No. That guideline is about branch <b>lifetime</b>, not a ban on concurrency.<sup><a href="#r3">3</a></sup> Three branches that each live <em>two hours</em> are completely healthy. Three branches that each live <em>two weeks</em> are the problem. TBD wants <b>many short trips</b> around the loop, and many can overlap.</p>
+  <p>The real lever for safe concurrency is <b>small + short</b>. If each agent's change is small and lands within hours:</p>
+  <ul>
+    <li><b>The conflict surface shrinks.</b> Two small PRs touching different files don't conflict. Most parallel work simply doesn't overlap.</li>
+    <li><b>The merge window is tiny.</b> The shorter a branch lives, the less <code>main</code> moves underneath it, so "update before merge" is cheap.</li>
+  </ul>
+  <div class="you"><b>Your steering lever:</b> when you direct several agents at once, give them <em>non-overlapping slices</em> — different features, different files. You're not managing Git; you're partitioning the work so the loops rarely cross. That's the job.</div>
+
+  <h2><span class="n">4</span>The subtle killer: the <em>logical</em> conflict</h2>
+  <p>Here's the failure that surprises people, and the reason "CI passed" isn't quite enough when many PRs land the same day:</p>
+  <div class="callout">
+    <b>Two PRs can each be green, and still break <code>main</code> when both merge.</b><br>
+    Agent A's PR renames a function. Agent B's PR — branched from the same older <code>main</code> — adds a new call to that function's <em>old</em> name. Each PR's CI passed, because each was tested against a <code>main</code> that didn't yet contain the other. Merge both, and the trunk is red. Git shows <em>no</em> textual conflict — the files don't even overlap. This is a <b>logical (semantic) conflict.</b>
+  </div>
+  <p>"Require up to date before merging" (checkbox 3) catches the simple case — it forces B to pull A's change in and re-test before merging. But it does so by making the agents take turns updating and waiting, which gets slow when several PRs are stacked up. GitHub's purpose-built answer is the <b>merge queue.</b><sup><a href="#r4">4</a></sup></p>
+
+  <figure>
+  <svg viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg" width="100%" role="img" aria-label="Three PRs entering a merge queue before main">
+    <defs><marker id="a" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5b5b5b"/></marker></defs>
+    <!-- three PRs -->
+    <g font-family="sans-serif" font-size="12" text-anchor="middle">
+      <rect x="20" y="30" width="120" height="34" rx="8" fill="#eef3f8" stroke="#3a6ea5"/><text x="80" y="52" fill="#3a6ea5">PR A ✓ green</text>
+      <rect x="20" y="100" width="120" height="34" rx="8" fill="#f3ecf8" stroke="#8a4fb0"/><text x="80" y="122" fill="#8a4fb0">PR B ✓ green</text>
+      <rect x="20" y="170" width="120" height="34" rx="8" fill="#fbeee5" stroke="#b4541f"/><text x="80" y="192" fill="#b4541f">PR C ✓ green</text>
+      <line x1="140" y1="47" x2="245" y2="110" stroke="#5b5b5b" stroke-width="1.5" marker-end="url(#a)"/>
+      <line x1="140" y1="117" x2="245" y2="117" stroke="#5b5b5b" stroke-width="1.5" marker-end="url(#a)"/>
+      <line x1="140" y1="187" x2="245" y2="124" stroke="#5b5b5b" stroke-width="1.5" marker-end="url(#a)"/>
+      <!-- queue -->
+      <rect x="250" y="78" width="190" height="78" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+      <text x="345" y="100" font-weight="700" fill="#1a1a1a">MERGE QUEUE</text>
+      <text x="345" y="120" font-size="11" fill="#5b5b5b">stacks A+B+C on latest main,</text>
+      <text x="345" y="135" font-size="11" fill="#5b5b5b">re-runs CI on the combination,</text>
+      <text x="345" y="150" font-size="11" fill="#5b5b5b">drops any that fail together</text>
+      <line x1="440" y1="117" x2="540" y2="117" stroke="#5b5b5b" stroke-width="1.5" marker-end="url(#a)"/>
+      <!-- main -->
+      <line x1="545" y1="40" x2="545" y2="195" stroke="#2e7d52" stroke-width="6"/>
+      <text x="600" y="120" fill="#2e7d52" font-weight="700">main</text>
+      <text x="600" y="138" font-size="11" fill="#2e7d52">stays green</text>
+    </g>
+  </svg>
+  <figcaption>A merge queue serializes ready PRs, re-tests them <em>combined</em> against the latest <code>main</code>, and only merges combinations that actually pass — so logical conflicts are caught before they reach the trunk, not after.<sup><a href="#r4">4</a></sup></figcaption>
+  </figure>
+
+  <p>You don't need a merge queue on a brand-new repo with low PR volume — checkbox 3 is enough at first. Reach for it the moment "several agents, several PRs per day" becomes routine and you notice PRs stepping on each other. It's a toggle in the same ruleset, so you can turn it on later without rework.</p>
+
+  <h2><span class="n">5</span>What this buys you</h2>
+  <div class="you"><b>You configure the gate once, on day one, before any code exists.</b> After that, concurrency is safe by construction: agents can fan out across features, and the only thing that gets serialized is the part that <em>must</em> be — the merge into <code>main</code>. Your bottleneck stops being "did an agent break the trunk?" and becomes "how fast can I review?" — which is a much better problem, and the subject of Lesson 3.</div>
+
+  <!-- QUIZ -->
+  <h2><span class="n">6</span>Check yourself</h2>
+  <div class="quiz" id="quiz">
+    <div class="q" data-correct="b">
+      <p class="qtext">1. You want 3 agents building 3 features in parallel today. Which day-one setting most directly stops one agent's broken work from poisoning the trunk the others branch from?</p>
+      <button class="opt" data-k="a">Auto-delete head branches after merge.</button>
+      <button class="opt" data-k="b">Require status checks (CI) to pass before merging.</button>
+      <button class="opt" data-k="c">Require conversation resolution.</button>
+      <div class="fb good">Right. If a red branch can't merge, <code>main</code> stays green — so every agent that later branches off it starts from a working trunk. (Pairs with "require a PR" so nothing bypasses CI.)</div>
+      <div class="fb bad">Those help, but the trunk-poisoning problem is specifically about <b>broken code reaching <code>main</code></b>. "Require status checks to pass" (b) is the gate that keeps red code out, so others branch from a green trunk.</div>
+    </div>
+
+    <div class="q" data-correct="c">
+      <p class="qtext">2. Running 3 agents on 3 short-lived branches at once — is that compatible with TBD's "keep active branches low / ≤3" guidance?</p>
+      <button class="opt" data-k="a">No — TBD allows only one branch at a time.</button>
+      <button class="opt" data-k="b">No — you must wait for each PR to merge before starting the next.</button>
+      <button class="opt" data-k="c">Yes — the guidance is about branch <em>lifetime</em>, not banning concurrency. Several short-lived branches overlapping is healthy TBD.</button>
+      <div class="fb good">Exactly. Three branches living two hours each is fine; three living two weeks is the problem. Many short trips around the loop, overlapping freely.</div>
+      <div class="fb bad">Re-read §3. TBD doesn't forbid concurrency — it forbids <b>long-lived</b> branches. Several branches that each live a few hours are exactly what TBD wants. The lever is keeping each one small and short.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">3. PR A (renames a function) and PR B (calls that function's old name) were each branched from the same older <code>main</code>. Both pass CI. You merge both. What happens, and what's designed to prevent it?</p>
+      <button class="opt" data-k="a">Git blocks the second merge with a textual conflict — nothing reaches main.</button>
+      <button class="opt" data-k="b"><code>main</code> goes red from a logical conflict (no textual overlap); a merge queue prevents it by re-testing the PRs <em>combined</em> against latest main before merging.</button>
+      <button class="opt" data-k="c">Both are fine — if each PR's CI passed, the combination always passes.</button>
+      <div class="fb good">That's the key insight of this lesson. Green-in-isolation ≠ green-combined. The merge queue tests the actual combination against the latest trunk, catching the break before it lands.</div>
+      <div class="fb bad">This is the subtle one. There's <b>no textual conflict</b> (different files), so Git won't block it — and "each passed" does <em>not</em> guarantee the combination passes. That's a <b>logical conflict</b>, and the <b>merge queue</b> (re-testing PRs combined against latest main) is what prevents it.</div>
+    </div>
+
+    <div class="q" data-correct="a">
+      <p class="qtext">4. When do you actually do this branch-protection setup?</p>
+      <button class="opt" data-k="a">Once, on day one, before any feature code exists — then it protects every future PR automatically.</button>
+      <button class="opt" data-k="b">After the first production incident, as a reaction.</button>
+      <button class="opt" data-k="c">Manually re-apply it on each new PR.</button>
+      <div class="fb good">Yes — it's a one-time gate, set before code. That's the whole "get the workflow right out of the gate" goal: the rules exist before the first agent ever opens a PR.</div>
+      <div class="fb bad">It's a <b>one-time, day-one</b> configuration (a). You don't reapply it per PR, and you don't want to wait for an incident — the entire point is that the gate exists <em>before</em> the first PR.</div>
+    </div>
+    <div class="score" id="score">Answer the questions above to see your score.</div>
+  </div>
+
+  <div class="ask">
+    <b>Ask your teacher.</b> Good follow-ups from here:
+    <ul style="margin:10px 0 0">
+      <li>"Walk me through clicking this setup in GitHub for my new repo."</li>
+      <li>"How do I slice work so my agents don't touch the same files?"</li>
+      <li>"What CI checks should I actually require on day one?"</li>
+      <li>"Ready for Lesson 3 — what makes a PR I can review in 3 minutes?"</li>
+    </ul>
+  </div>
+
+  <footer>
+    <b>Sources</b> (fetched &amp; verified 2026-06-09):
+    <ol>
+      <li id="r1"><a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches">About protected branches</a> — GitHub Docs (require PR, status checks, up-to-date, reviews, conversation resolution, no bypass).</li>
+      <li id="r2"><a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets">About rulesets</a> — GitHub Docs (modern form of branch protection).</li>
+      <li id="r3"><a href="https://dora.dev/capabilities/trunk-based-development/">Trunk-based development</a> — DORA (short branch lifetime; merge daily).</li>
+      <li id="r4"><a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue">Managing a merge queue</a> — GitHub Docs (batches PRs, re-tests against latest base).</li>
+    </ol>
+    See <code>reference/day-one-checklist.html</code> for the printable setup checklist · <code>reference/glossary.html</code> for terms.
+  </footer>
+</div>
+
+<script>
+  // checklist
+  const items = document.querySelectorAll('#check .item');
+  const prog = document.getElementById('prog');
+  let done = 0;
+  items.forEach(it => it.addEventListener('click', () => {
+    it.classList.toggle('on');
+    done = document.querySelectorAll('#check .item.on').length;
+    prog.textContent = done + ' / ' + items.length + ' reasoned through' + (done === items.length ? ' — gate complete ✓' : '');
+  }));
+  // quiz
+  let answered = 0, correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    const key = q.dataset.correct;
+    const opts = q.querySelectorAll('.opt');
+    const good = q.querySelector('.fb.good'), bad = q.querySelector('.fb.bad');
+    opts.forEach(opt => opt.addEventListener('click', () => {
+      if (q.dataset.done) return; q.dataset.done = '1'; answered++;
+      const right = opt.dataset.k === key; if (right) correct++;
+      opts.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add('correct');
+        else if (o === opt) o.classList.add('wrong'); });
+      (right ? good : bad).classList.add('show');
+      document.getElementById('score').textContent = correct + ' / ' + answered + ' so far' +
+        (answered === 4 ? (correct === 4 ? ' — trunk secured. Ready for Lesson 3.' : ' — check the highlighted answers, then ask me anything.') : '');
+    }));
+  });
+</script>
+</body>
+</html>

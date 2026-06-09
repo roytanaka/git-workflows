@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trunk-Based Development — Glossary</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b5b5b; --line:#e3e0d8; --bg:#faf8f3;
+    --accent:#3a6ea5; --accent-soft:#eef3f8; --trunk:#2e7d52;
+  }
+  *{box-sizing:border-box}
+  body{
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:48px 20px;
+  }
+  .wrap{max-width:780px; margin:0 auto}
+  header{border-bottom:3px solid var(--ink); padding-bottom:16px; margin-bottom:8px}
+  .kicker{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0}
+  h1{font-size:30px; margin:6px 0 0; letter-spacing:-.01em}
+  .sub{color:var(--muted); margin:10px 0 0; font-size:14px}
+  dl{margin:28px 0 0}
+  dt{font-weight:700; font-size:18px; margin:26px 0 4px; color:var(--ink)}
+  dt .tag{font-weight:600; font-size:11px; letter-spacing:.05em; text-transform:uppercase;
+    background:var(--accent-soft); color:var(--accent); padding:2px 8px; border-radius:20px; margin-left:8px; vertical-align:middle}
+  dd{margin:0; color:#2c2c2c}
+  dd a{color:var(--accent)}
+  .x{color:var(--muted); font-size:14px; margin-top:3px}
+  footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line); font-size:13px; color:var(--muted)}
+  @media print{ body{background:#fff; padding:0} .sub{color:#333} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Reference · Git Workflows</p>
+    <h1>Trunk-Based Development — Glossary</h1>
+    <p class="sub">The shared vocabulary for every lesson. When a term is used in a lesson, it means exactly what it means here.</p>
+  </header>
+
+  <dl>
+    <dt>Trunk <span class="tag">core</span></dt>
+    <dd>The single, shared main branch that all work integrates into — usually called <code>main</code>. The metaphor is a tree: the trunk is the one fat, long, central line; branches are short shoots off it.
+      <div class="x">Canonical: <a href="https://trunkbaseddevelopment.com/">trunkbaseddevelopment.com</a></div></dd>
+
+    <dt>Trunk-Based Development (TBD) <span class="tag">core</span></dt>
+    <dd>A workflow where developers integrate small changes into the trunk frequently (at least daily), keeping the trunk always releasable. The opposite of long-lived feature branches that drift for weeks.</dd>
+
+    <dt>Short-lived feature branch <span class="tag">core</span></dt>
+    <dd>A branch off the trunk that exists only long enough to build a small change, get it reviewed, and merge it back — typically hours, at most a day or two. It exists for code review and CI checks, then is deleted.
+      <div class="x"><a href="https://trunkbaseddevelopment.com/short-lived-feature-branches/">trunkbaseddevelopment.com/short-lived-feature-branches</a></div></dd>
+
+    <dt>Merge to trunk <span class="tag">core</span></dt>
+    <dd>Integrating a feature branch's change back into <code>main</code>. In TBD this happens often and in small pieces — DORA's marker of high performers is merging to trunk <em>at least once a day</em> with ≤3 active branches at a time.
+      <div class="x"><a href="https://dora.dev/capabilities/trunk-based-development/">dora.dev — trunk-based development</a></div></dd>
+
+    <dt>Continuous Integration (CI) <span class="tag">practice</span></dt>
+    <dd>The practice TBD operationalizes: everyone integrates to mainline at least daily, behind an automated, self-testing build that proves the trunk still works.
+      <div class="x"><a href="https://martinfowler.com/articles/continuousIntegration.html">martinfowler.com — Continuous Integration</a></div></dd>
+
+    <dt>Pull request (PR) <span class="tag">practice</span></dt>
+    <dd>A proposal to merge a branch into the trunk, paired with a diff for review and automated checks. In your setup, this is where an AI agent's work lands for you to review before it touches <code>main</code>.</dd>
+
+    <dt>Preview deployment <span class="tag">practice</span></dt>
+    <dd>A live, throwaway deployment automatically built from a branch or PR, with its own URL — so you can <em>see</em> the change running before merging. Created on every non-production push or PR.
+      <div class="x"><a href="https://vercel.com/docs/deployments/environments">Vercel — Environments</a> · <a href="https://docs.netlify.com/site-deploys/deploy-previews/">Netlify — Deploy Previews</a></div></dd>
+
+    <dt>Releasable / "green" trunk <span class="tag">core</span></dt>
+    <dd>The state TBD protects: the trunk could be deployed to production at any moment without breaking. Nothing half-finished is ever visible on it.</dd>
+
+    <dt>Feature flag (feature toggle) <span class="tag">practice</span></dt>
+    <dd>A runtime switch that hides incomplete or not-yet-launched work. It lets you merge unfinished features into the trunk (keeping branches short) without exposing them to users.
+      <div class="x"><a href="https://martinfowler.com/articles/feature-toggles.html">martinfowler.com — Feature Toggles</a></div></dd>
+
+    <dt>Release branch <span class="tag">release</span></dt>
+    <dd>A branch cut from the trunk at release time, "hardened," and deleted after release. Used when you must support a shipped version. Many continuously-deployed web apps skip these and <em>release straight from trunk</em> instead.
+      <div class="x"><a href="https://trunkbaseddevelopment.com/branch-for-release/">trunkbaseddevelopment.com/branch-for-release</a></div></dd>
+
+    <dt>Fix-forward vs. cherry-pick <span class="tag">release</span></dt>
+    <dd><strong>Fix-forward:</strong> fix a bug on trunk and release again. <strong>Cherry-pick:</strong> commit the fix to trunk first, then copy that one commit onto a live release branch. Rule: fixes flow trunk → release branch, never the reverse.</dd>
+
+    <dt>Scaled vs. small-team TBD <span class="tag">core</span></dt>
+    <dd><strong>Small team:</strong> commit straight to trunk. <strong>Scaled:</strong> every change goes through a short-lived branch + PR review before merging. With AI agents committing, you run the <em>scaled</em> form — review is the whole point.</dd>
+
+    <dt>Branch protection / ruleset <span class="tag">setup</span></dt>
+    <dd>A one-time configuration that stops anyone pushing directly to <code>main</code> and forces every change through a reviewed, tested PR. "Rulesets" are GitHub's modern, layerable form of the older "branch protection rules."
+      <div class="x"><a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets">GitHub — About rulesets</a></div></dd>
+
+    <dt>Required status check <span class="tag">setup</span></dt>
+    <dd>An automated check (build, tests, lint) that must pass before a PR can merge. The rule that keeps a red branch out of the trunk others branch from.</dd>
+
+    <dt>Up to date before merging <span class="tag">setup</span></dt>
+    <dd>A protection rule requiring a PR to include the latest <code>main</code> (and be re-tested against it) before it can merge — so it was validated against what it's actually merging into, not a stale snapshot.</dd>
+
+    <dt>Logical (semantic) conflict <span class="tag">concurrency</span></dt>
+    <dd>When two PRs each pass CI in isolation but break <code>main</code> when combined — e.g. one renames a function, the other (branched from older trunk) calls the old name. Git shows <em>no</em> textual conflict; only running the combination reveals it.</dd>
+
+    <dt>Merge queue <span class="tag">concurrency</span></dt>
+    <dd>A mechanism that serializes ready PRs, stacks them on the latest <code>main</code>, re-runs required checks on the <em>combination</em>, and merges only what passes together — catching logical conflicts before they reach the trunk. Turn on when many PRs merge per day.
+      <div class="x"><a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue">GitHub — Managing a merge queue</a></div></dd>
+  </dl>
+
+  <footer>
+    Sources verified 2026-06-09 · See <code>RESOURCES.md</code> for full annotations. Ask your teacher (the agent) to expand any entry.
+  </footer>
+</div>
+</body>
+</html>

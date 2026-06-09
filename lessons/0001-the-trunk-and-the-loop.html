@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1 · The Trunk and the Loop</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b5b5b; --line:#e3e0d8; --bg:#faf8f3; --card:#fff;
+    --accent:#3a6ea5; --accent-soft:#eef3f8; --trunk:#2e7d52; --trunk-soft:#e7f3ec;
+    --warn:#b4541f; --warn-soft:#fbeee5; --ok:#2e7d52; --bad:#b4292f;
+  }
+  *{box-sizing:border-box}
+  body{font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:48px 20px}
+  .wrap{max-width:760px; margin:0 auto}
+  header{border-bottom:3px solid var(--ink); padding-bottom:18px}
+  .kicker{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0}
+  h1{font-size:34px; margin:8px 0 6px; letter-spacing:-.015em; line-height:1.15}
+  .goal{background:var(--accent-soft); border-left:4px solid var(--accent); padding:12px 16px; margin:18px 0 0; border-radius:0 8px 8px 0; font-size:15px}
+  .goal b{color:var(--accent)}
+  h2{font-size:23px; margin:42px 0 6px; letter-spacing:-.01em}
+  h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:8px}
+  p{margin:14px 0}
+  .lead{font-size:19px}
+  cite, .cite{font-style:normal}
+  a{color:var(--accent)}
+  sup a{text-decoration:none; font-weight:700; font-size:12px; padding:0 1px}
+  .trunk-word{color:var(--trunk); font-weight:700}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin:20px 0}
+  .callout{background:var(--warn-soft); border-left:4px solid var(--warn); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .callout b{color:var(--warn)}
+  .you{background:var(--trunk-soft); border-left:4px solid var(--trunk); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .you b{color:var(--trunk)}
+  ul{margin:14px 0; padding-left:22px}
+  li{margin:7px 0}
+  figure{margin:26px 0; text-align:center}
+  figcaption{font-size:13px; color:var(--muted); margin-top:10px}
+  .stat{display:flex; gap:14px; flex-wrap:wrap; margin:20px 0}
+  .stat div{flex:1; min-width:160px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px}
+  .stat b{display:block; font-size:26px; color:var(--accent); line-height:1.1}
+  .stat span{font-size:13px; color:var(--muted)}
+
+  /* quiz */
+  .quiz{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 24px 24px; margin:28px 0}
+  .q{padding:20px 0; border-bottom:1px solid var(--line)}
+  .q:last-child{border-bottom:none}
+  .q p.qtext{font-weight:600; margin:6px 0 14px}
+  .opt{display:block; width:100%; text-align:left; background:var(--bg); border:1.5px solid var(--line);
+    border-radius:9px; padding:11px 14px; margin:8px 0; font:inherit; font-size:15px; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--ok); background:#eaf5ee}
+  .opt.wrong{border-color:var(--bad); background:#fbecec}
+  .opt:disabled{cursor:default}
+  .fb{font-size:14.5px; margin-top:10px; padding:11px 14px; border-radius:8px; display:none}
+  .fb.show{display:block}
+  .fb.good{background:#eaf5ee; color:#1f5c3a}
+  .fb.bad{background:#fbecec; color:#7d2025}
+  .score{font-size:15px; font-weight:600; margin-top:18px; text-align:center; color:var(--muted)}
+
+  .ask{margin-top:40px; background:#1a1a1a; color:#f3efe6; border-radius:14px; padding:22px 24px}
+  .ask b{color:#fff}
+  .ask code{background:#333; padding:2px 6px; border-radius:5px; font-size:14px}
+  footer{margin-top:30px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  footer ol{padding-left:20px; margin:8px 0}
+  footer a{color:var(--accent)}
+  @media print{ body{background:#fff;padding:0} .quiz,.ask{break-inside:avoid} .opt{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Lesson 1 · Trunk-Based Development</p>
+    <h1>The Trunk and the Loop</h1>
+    <div class="goal"><b>By the end of this lesson</b> you'll be able to draw the one loop that <em>is</em> trunk-based development, explain why short branches beat long ones, and see exactly where you sit in it as the reviewer of AI-produced work.</div>
+  </header>
+
+  <p class="lead">Every Git workflow is really a story about <b>one question</b>: how do many in-progress changes become one shippable codebase without chaos? Trunk-based development answers it with the simplest possible shape — and almost everything else (releases, preview deploys, feature flags) hangs off that shape.</p>
+
+  <h2><span class="n">1</span>The trunk</h2>
+  <p>Picture a tree. The <span class="trunk-word">trunk</span> is the one fat, continuous line running up the middle; branches are short shoots off it. In Git, the <span class="trunk-word">trunk</span> is your single shared main line — the branch called <code>main</code> — and the rule that defines the whole workflow is this:</p>
+  <div class="card" style="text-align:center; font-size:19px"><b>The trunk is <span class="trunk-word">always releasable.</span></b><br><span style="font-size:15px; color:var(--muted)">At any second, you could deploy <code>main</code> to production and nothing would be broken or half-finished.</span></div>
+  <p>That one constraint forces every other habit. If <code>main</code> must always be deployable, then no one can park weeks of unfinished work directly on it — and no one can let a side branch drift so far that merging it back becomes a battle.<sup><a href="#r1">1</a></sup></p>
+
+  <h2><span class="n">2</span>Why branches stay short</h2>
+  <p>The enemy of a releasable trunk is the <b>long-lived branch</b>. The longer a branch lives away from <code>main</code>, the more the two drift apart — and the merge at the end becomes a painful, risky "big bang" where you reconcile weeks of divergence at once. You've felt the loose version of this: a branch you were scared to merge.</p>
+  <p>TBD's fix is almost aggressively simple: <b>keep branches so short they can't drift.</b> A change lives on its own branch only long enough to be built, reviewed, and merged — hours, not weeks — then the branch is deleted.<sup><a href="#r2">2</a></sup> Google's DORA research measured this and found it predicts higher delivery performance. Their markers of teams who do it well:</p>
+  <div class="stat">
+    <div><b>≤ 3</b><span>active branches in the repo at once</span></div>
+    <div><b>&lt; 1 day</b><span>branch lifetime — merge to trunk at least daily</span></div>
+    <div><b>0</b><span>code freezes or "integration phases"</span></div>
+  </div>
+  <p class="cite" style="font-size:14px; color:var(--muted)">— DORA, <i>Trunk-based development</i> capability<sup><a href="#r3">3</a></sup></p>
+
+  <h2><span class="n">3</span>The loop</h2>
+  <p>Here is the entire workflow. One change makes one trip around this loop, and you run the loop again and again, many times a day:</p>
+
+  <figure>
+  <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" width="100%" role="img" aria-label="The trunk-based development loop">
+    <defs>
+      <marker id="arr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#3a6ea5"/>
+      </marker>
+      <marker id="arrg" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#2e7d52"/>
+      </marker>
+    </defs>
+    <!-- trunk line -->
+    <line x1="40" y1="250" x2="640" y2="250" stroke="#2e7d52" stroke-width="6"/>
+    <text x="46" y="278" font-size="13" fill="#2e7d52" font-weight="700" font-family="sans-serif">main (trunk) — always releasable</text>
+    <!-- branch out -->
+    <path d="M150,250 C150,190 200,150 260,150" fill="none" stroke="#3a6ea5" stroke-width="3" marker-end="url(#arr)"/>
+    <!-- branch back -->
+    <path d="M520,150 C560,150 530,250 540,250" fill="none" stroke="#2e7d52" stroke-width="3" marker-end="url(#arrg)"/>
+    <!-- branch line -->
+    <line x1="255" y1="150" x2="515" y2="150" stroke="#3a6ea5" stroke-width="3" stroke-dasharray="2 0"/>
+    <!-- nodes -->
+    <g font-family="sans-serif" font-size="13" font-weight="600" text-anchor="middle">
+      <circle cx="150" cy="250" r="7" fill="#2e7d52"/>
+      <circle cx="290" cy="150" r="7" fill="#3a6ea5"/><text x="290" y="132" fill="#3a6ea5">① branch</text>
+      <circle cx="380" cy="150" r="7" fill="#3a6ea5"/><text x="380" y="132" fill="#3a6ea5">② PR + CI</text>
+      <circle cx="470" cy="150" r="7" fill="#3a6ea5"/><text x="470" y="132" fill="#3a6ea5">③ preview</text>
+      <text x="470" y="186" fill="#5b5b5b" font-weight="400" font-size="11">④ you review</text>
+      <circle cx="540" cy="250" r="7" fill="#2e7d52"/><text x="556" y="232" fill="#2e7d52" text-anchor="start">⑤ merge → ⑥ delete branch</text>
+    </g>
+  </svg>
+  <figcaption>One change, one trip. Cut a short branch off <code>main</code>, open a PR (CI runs), a preview deploy appears, you review it, merge to <code>main</code>, delete the branch. Repeat.</figcaption>
+  </figure>
+
+  <div class="card">
+    <b>The six steps:</b>
+    <ul>
+      <li><b>① Branch</b> — cut a short-lived branch off <code>main</code> for one small, single-purpose change.</li>
+      <li><b>② PR + CI</b> — open a pull request; automated checks (build, tests) prove it doesn't break the trunk.<sup><a href="#r4">4</a></sup></li>
+      <li><b>③ Preview</b> — a live preview deployment is built automatically, with its own URL.<sup><a href="#r5">5</a></sup></li>
+      <li><b>④ Review</b> — a human looks at the diff <em>and</em> the running preview, and approves or requests changes.</li>
+      <li><b>⑤ Merge</b> — the change lands on <code>main</code>, which (because it was small and reviewed) stays releasable.</li>
+      <li><b>⑥ Delete</b> — the branch is deleted. It did its job; keeping it around just adds drift risk.</li>
+    </ul>
+  </div>
+
+  <div class="callout"><b>This is "scaled" TBD.</b> A tiny team might skip the branch and commit straight to <code>main</code>. The moment changes flow through a <em>branch + PR + review</em> before merging, you're doing the <em>scaled</em> form.<sup><a href="#r6">6</a></sup> That's the form you want — because review is the entire point of your setup.</div>
+
+  <h2><span class="n">4</span>Where you sit in the loop</h2>
+  <p>Your setup has a twist most TBD writing doesn't cover: <b>Claude Code does steps ① and ②</b> — it cuts the branch, writes the code, and opens the PR. Automation does ② and ③. That leaves <b>step ④, review, and step ⑤, the decision to merge</b>, as <em>your</em> job.</p>
+  <div class="you"><b>Your role is reviewer + release manager.</b> You are the human gate that protects "always releasable." The agent proposes; the preview deploy shows you the change running; you decide whether <code>main</code> absorbs it. Every later lesson — repo setup, PR sizing, releases, feature flags — exists to make <em>that judgment</em> faster and safer.</div>
+  <p>So when you direct the agent, you're really steering the loop: "make this change <b>small enough</b> that I can review one trip around the loop in a few minutes, and <b>self-contained enough</b> that merging it keeps <code>main</code> green." Branch lifetime and PR size aren't bureaucracy — they're the levers that keep your review tractable.</p>
+
+  <!-- QUIZ -->
+  <h2><span class="n">5</span>Check yourself</h2>
+  <p>Scenario questions — pick one, get instant feedback. No grade, just calibration.</p>
+  <div class="quiz" id="quiz">
+    <div class="q" data-correct="b">
+      <p class="qtext">1. An agent has been building a big feature on a branch for 9 days. It's not done. Under TBD, what's the core problem?</p>
+      <button class="opt" data-k="a">The branch name is probably wrong.</button>
+      <button class="opt" data-k="b">The branch has drifted far from <code>main</code> — the eventual merge will be a risky big-bang, and the trunk hasn't been getting this work.</button>
+      <button class="opt" data-k="c">Nothing — long branches are fine as long as CI passes at the end.</button>
+      <div class="fb good">Right. Long-lived branches are <em>the</em> thing TBD exists to prevent. The fix isn't "merge carefully later" — it's to slice the feature into small pieces that each take a short trip around the loop (lesson 3 covers how to direct that, and lesson 6 covers hiding the unfinished parts with a feature flag).</div>
+      <div class="fb bad">Not quite. The danger isn't the name or the CI result — it's <b>drift</b>. Nine days off <code>main</code> means a big, risky merge and a trunk that hasn't received the work. TBD slices this into small pieces that each take a short trip around the loop.</div>
+    </div>
+
+    <div class="q" data-correct="c">
+      <p class="qtext">2. In your setup (AI commits, you review), which step of the loop is <em>yours</em> and most defines your job?</p>
+      <button class="opt" data-k="a">① cutting the branch.</button>
+      <button class="opt" data-k="b">② running CI.</button>
+      <button class="opt" data-k="c">④ reviewing the diff + preview, and deciding whether to merge.</button>
+      <div class="fb good">Exactly. The agent and automation handle branch/PR/CI/preview. You are the human gate at review-and-merge — the one keeping <code>main</code> releasable.</div>
+      <div class="fb bad">Re-read §4. The agent cuts the branch and CI runs automatically. <b>Review and the merge decision (④–⑤)</b> are yours — that's the gate that protects an always-releasable trunk.</div>
+    </div>
+
+    <div class="q" data-correct="a">
+      <p class="qtext">3. Why delete the branch after merging (step ⑥)?</p>
+      <button class="opt" data-k="a">It already did its job (review + CI); keeping it alive just invites drift and clutter. The change now lives in <code>main</code>.</button>
+      <button class="opt" data-k="b">Git forces you to delete merged branches.</button>
+      <button class="opt" data-k="c">So you can reuse the exact same branch name next time.</button>
+      <div class="fb good">Yes. A branch is a temporary workspace for one trip around the loop. Once merged, its purpose is spent — lingering branches are exactly the long-lived-branch risk creeping back in.</div>
+      <div class="fb bad">Not it. Git doesn't force deletion, and name reuse isn't the point. A branch is a <b>temporary workspace</b>; once the change is in <code>main</code>, keeping the branch only re-introduces drift and clutter.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">4. "The trunk is always releasable." A PR would merge code for a half-built feature that users could stumble into. Best TBD-aligned move?</p>
+      <button class="opt" data-k="a">Keep it on a long branch until the whole feature is done.</button>
+      <button class="opt" data-k="b">Merge it small, but put the unfinished feature behind a feature flag so users can't reach it yet.</button>
+      <button class="opt" data-k="c">Merge it and just hope no one finds it before it's finished.</button>
+      <div class="fb good">That's the TBD instinct. Feature flags let you keep merging small changes into a releasable trunk without exposing half-done work — we'll dedicate a whole lesson to them. You picked the loop over the long branch.</div>
+      <div class="fb bad">Reconsider. (a) re-creates the long-lived-branch problem; (c) breaks "always releasable." The TBD answer is <b>(b)</b>: merge small, but hide the unfinished feature behind a <b>feature flag</b> — that's the next big idea in this curriculum.</div>
+    </div>
+
+    <div class="score" id="score">Answer the questions above to see your score.</div>
+  </div>
+
+  <div class="ask">
+    <b>Your teacher is one message away.</b> I'm the agent that built this lesson — ask me anything that's fuzzy. Good follow-ups right now:
+    <ul style="margin:10px 0 0">
+      <li>"How small is 'small enough' for a PR I have to review?"</li>
+      <li>"Show me what day-one repo setup looks like for this." <span style="color:#b9b3a6">(that's lesson 2)</span></li>
+      <li>"How is this different from GitFlow / the loose way I worked before?"</li>
+    </ul>
+  </div>
+
+  <footer>
+    <b>Sources</b> (fetched &amp; verified 2026-06-09):
+    <ol>
+      <li id="r1"><a href="https://trunkbaseddevelopment.com/">trunkbaseddevelopment.com — Paul Hammant</a> (trunk metaphor; always-releasable trunk).</li>
+      <li id="r2"><a href="https://trunkbaseddevelopment.com/short-lived-feature-branches/">Short-lived feature branches</a> — trunkbaseddevelopment.com.</li>
+      <li id="r3"><a href="https://dora.dev/capabilities/trunk-based-development/">Trunk-based development</a> — DORA / Google (≤3 branches, daily merge, no code freezes).</li>
+      <li id="r4"><a href="https://martinfowler.com/articles/continuousIntegration.html">Continuous Integration</a> — Martin Fowler.</li>
+      <li id="r5"><a href="https://vercel.com/docs/deployments/environments">Environments &amp; preview deployments</a> — Vercel.</li>
+      <li id="r6"><a href="https://trunkbaseddevelopment.com/">Scaled vs. small-team TBD</a> — trunkbaseddevelopment.com.</li>
+    </ol>
+    See <code>reference/glossary.html</code> for definitions · <code>RESOURCES.md</code> for the full reading list.
+  </footer>
+</div>
+
+<script>
+  let answered = 0, correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    const key = q.dataset.correct;
+    const opts = q.querySelectorAll('.opt');
+    const fbGood = q.querySelector('.fb.good');
+    const fbBad = q.querySelector('.fb.bad');
+    opts.forEach(opt => opt.addEventListener('click', () => {
+      if (q.dataset.done) return;
+      q.dataset.done = '1';
+      answered++;
+      const chosen = opt.dataset.k;
+      const right = chosen === key;
+      if (right) correct++;
+      opts.forEach(o => {
+        o.disabled = true;
+        if (o.dataset.k === key) o.classList.add('correct');
+        else if (o === opt) o.classList.add('wrong');
+      });
+      (right ? fbGood : fbBad).classList.add('show');
+      const s = document.getElementById('score');
+      s.textContent = correct + ' / ' + answered + ' so far' + (answered === 4 ? (correct === 4 ? ' — you’ve got the mental model. Ready for lesson 2.' : ' — review the highlighted answers, then ask me anything fuzzy.') : '');
+    }));
+  });
+</script>
+</body>
+</html>
