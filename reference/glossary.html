@@ -75,12 +75,31 @@
     <dd>A runtime switch that hides incomplete or not-yet-launched work. It lets you merge unfinished features into the trunk (keeping branches short) without exposing them to users.
       <div class="x"><a href="https://martinfowler.com/articles/feature-toggles.html">martinfowler.com — Feature Toggles</a></div></dd>
 
+    <dt>Deploy vs. release <span class="tag">release</span></dt>
+    <dd>Two separate events you control independently. <strong>Deploy:</strong> the code is built and running on production infrastructure — automatic on every merge to <code>main</code> in a CD setup. <strong>Release:</strong> a user can actually see/use the feature — a separate decision, usually a feature-flag flip. Decoupling them is what lets unfinished work deploy to production while staying hidden.
+      <div class="x"><a href="https://martinfowler.com/articles/feature-toggles.html">martinfowler.com — Feature Toggles</a></div></dd>
+
+    <dt>Release from trunk <span class="tag">release</span></dt>
+    <dd>The release model where production is simply the latest trunk — no release branch is cut. Suits a very high release cadence; when something breaks you <em>roll forward</em> (fix on trunk and ship again) rather than patch a side branch. The default for a continuously-deployed SaaS with no user-installed versions.
+      <div class="x"><a href="https://trunkbaseddevelopment.com/release-from-trunk/">trunkbaseddevelopment.com/release-from-trunk</a></div></dd>
+
+    <dt>Roll-forward <span class="tag">release</span></dt>
+    <dd>The fix discipline that comes with releasing from trunk: when a bug reaches production, you fix it <em>on trunk</em> (like a fast little feature) and let the normal merge re-deploy — never patch production or a side branch directly. Fixes always flow trunk → production, so the next deploy can't undo them.</dd>
+
     <dt>Release branch <span class="tag">release</span></dt>
     <dd>A branch cut from the trunk at release time, "hardened," and deleted after release. Used when you must support a shipped version. Many continuously-deployed web apps skip these and <em>release straight from trunk</em> instead.
       <div class="x"><a href="https://trunkbaseddevelopment.com/branch-for-release/">trunkbaseddevelopment.com/branch-for-release</a></div></dd>
 
     <dt>Fix-forward vs. cherry-pick <span class="tag">release</span></dt>
     <dd><strong>Fix-forward:</strong> fix a bug on trunk and release again. <strong>Cherry-pick:</strong> commit the fix to trunk first, then copy that one commit onto a live release branch. Rule: fixes flow trunk → release branch, never the reverse.</dd>
+
+    <dt>Squash and merge <span class="tag">release</span></dt>
+    <dd>A merge style that collapses all of a PR's work-in-progress commits into a <em>single</em> commit on <code>main</code>. GitHub defaults that commit's message to the <strong>PR title</strong> — so the PR title becomes your permanent trunk history. Keeps the trunk log clean and one-line-per-change.
+      <div class="x"><a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges">GitHub — About pull request merges</a></div></dd>
+
+    <dt>Conventional Commits <span class="tag">release</span></dt>
+    <dd>A lightweight convention for commit/PR-title format: <code>&lt;type&gt;: &lt;description&gt;</code>, where <code>feat:</code> is a new capability, <code>fix:</code> a bug fix, <code>chore:</code> plumbing (and <code>!</code> marks a breaking change). With squash-merge it makes the trunk log skimmable and is a free on-ramp to auto-generated release notes — without committing to the version-bumping machinery. Cheap to adopt when an agent writes the commits: put it in the brief.
+      <div class="x"><a href="https://www.conventionalcommits.org/en/v1.0.0/">conventionalcommits.org</a></div></dd>
 
     <dt>Scaled vs. small-team TBD <span class="tag">core</span></dt>
     <dd><strong>Small team:</strong> commit straight to trunk. <strong>Scaled:</strong> every change goes through a short-lived branch + PR review before merging. With AI agents committing, you run the <em>scaled</em> form — review is the whole point.</dd>

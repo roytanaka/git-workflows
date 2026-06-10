@@ -34,6 +34,14 @@ All URLs below were fetched and verified live on 2026-06-09.
   The modern, layerable form of branch protection. Use for: how to actually apply the day-one gate.
 - [GitHub — Managing a merge queue](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue)
   Batches ready PRs, re-tests them combined against latest base, merges only what passes together. Use for: many-PRs-per-day concurrency and logical conflicts.
+
+### Releases & commit conventions (for Lesson 5)
+- [trunkbaseddevelopment.com — Release from Trunk](https://trunkbaseddevelopment.com/release-from-trunk/) & [Branch for Release](https://trunkbaseddevelopment.com/branch-for-release/)
+  The two release models and when each applies. Verified quotes: very-high-cadence teams "do not need (and cannot use) release branches at all" and "roll forward and fix the bug on the trunk as if it were a feature"; branch-for-release is "only when necessary… late, and instead of freeze," with fixes made on trunk first then cherry-picked (never the reverse). Use for: the release-from-trunk vs branch-for-release fork and the roll-forward rule.
+- [GitHub — About pull request merges](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges)
+  Squash-and-merge combines a PR's commits into one; the default commit message comes from the **PR title** (when the PR has >1 commit). The grounding for "the PR title *is* your trunk history." Use for: the squash-merge + PR-title-convention argument.
+- [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+  Spec: `<type>[optional scope]: <description>`; `feat`→MINOR, `fix`→PATCH, `!`/`BREAKING CHANGE`→MAJOR; other types (`chore`, `docs`, `refactor`, `perf`, `test`) optional. Use for: the lightweight PR-title convention. **Decision (learning-record 0005):** adopt the convention (squash-merge + Conventional PR titles), *not* the semantic-release/auto-versioning machinery — muted value for a single always-live SaaS with no installed versions.
 - [SmartBear — Best Practices for Peer Code Review](https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/)
   Summarizes the Cisco study (the largest code-review study run): a reviewer is effective up to ~200–400 LOC in a 60–90 min sitting, yielding 70–90% defect detection; detection collapses above ~500 LOC/hr. **The hard number behind "keep PRs small"** — use for the reviewable-PR and review-quality lessons.
 - [Do Small Code Changes Merge Faster? (arXiv 2203.05045)](https://arxiv.org/pdf/2203.05045)

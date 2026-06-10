@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 5 · Shipping From the Trunk</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b5b5b; --line:#e3e0d8; --bg:#faf8f3; --card:#fff;
+    --accent:#3a6ea5; --accent-soft:#eef3f8; --trunk:#2e7d52; --trunk-soft:#e7f3ec;
+    --warn:#b4541f; --warn-soft:#fbeee5; --ok:#2e7d52; --bad:#b4292f;
+  }
+  *{box-sizing:border-box}
+  body{font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:48px 20px}
+  .wrap{max-width:760px; margin:0 auto}
+  header{border-bottom:3px solid var(--ink); padding-bottom:18px}
+  .kicker{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0}
+  h1{font-size:33px; margin:8px 0 6px; letter-spacing:-.015em; line-height:1.15}
+  .goal{background:var(--accent-soft); border-left:4px solid var(--accent); padding:12px 16px; margin:18px 0 0; border-radius:0 8px 8px 0; font-size:15px}
+  .goal b{color:var(--accent)}
+  h2{font-size:23px; margin:44px 0 6px; letter-spacing:-.01em}
+  h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:8px}
+  p{margin:14px 0}
+  .lead{font-size:19px}
+  a{color:var(--accent)}
+  sup a{text-decoration:none; font-weight:700; font-size:12px; padding:0 1px}
+  code{background:#efece4; padding:1.5px 5px; border-radius:5px; font-size:14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin:20px 0}
+  .callout{background:var(--warn-soft); border-left:4px solid var(--warn); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .callout b{color:var(--warn)}
+  .you{background:var(--trunk-soft); border-left:4px solid var(--trunk); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .you b{color:var(--trunk)}
+  ul{margin:14px 0; padding-left:22px} li{margin:7px 0}
+  figure{margin:26px 0; text-align:center}
+  figcaption{font-size:13px; color:var(--muted); margin-top:10px}
+
+  /* deploy/release band + pick-one comparison */
+  .signals{display:flex; gap:12px; flex-wrap:wrap; margin:22px 0}
+  .sig{flex:1 1 200px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+  .sig .h{font-weight:800; color:var(--accent); font-size:15px}
+  .sig .b{font-size:14px; color:#333; margin-top:5px}
+  .sig.surface{border-color:var(--trunk)}
+  .sig.surface .h{color:var(--trunk)}
+
+  /* two-way comparison */
+  .vs{display:flex; gap:12px; flex-wrap:wrap; margin:22px 0}
+  .col{flex:1 1 300px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px}
+  .col.pick{border:2px solid var(--trunk); background:var(--trunk-soft)}
+  .col .h{font-weight:800; font-size:16px; color:var(--accent)}
+  .col.pick .h{color:var(--trunk)}
+  .col .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; background:var(--trunk); color:#fff; padding:2px 9px; border-radius:20px; margin-left:8px; vertical-align:middle}
+  .col ul{margin:12px 0 0; padding-left:20px}
+  .col li{font-size:14px; margin:6px 0}
+
+  /* cheat-sheet table for commit types */
+  .cheat{width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden}
+  .cheat th,.cheat td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  .cheat th{background:var(--accent-soft); color:var(--accent); font-size:13px; letter-spacing:.03em; text-transform:uppercase}
+  .cheat tr:last-child td{border-bottom:none}
+  .cheat code{background:#efece4}
+
+  /* scenario / tagging widget (shared) */
+  .triage{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 22px 20px; margin:26px 0}
+  .triage h3{font-size:15px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:18px 0 4px}
+  .pr{border:1px solid var(--line); border-radius:11px; padding:14px 16px; margin:16px 0}
+  .pr .title{font-weight:700; font-size:16px}
+  .pr .meta{font-size:13.5px; color:#333; margin:5px 0 4px}
+  .pr .meta em{color:var(--muted)}
+  .btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+  .tbtn{flex:1 1 30%; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:9px 10px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:.12s}
+  .tbtn:hover{border-color:var(--accent)}
+  .tbtn:disabled{cursor:default; opacity:.85}
+  .tbtn.picked-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .tbtn.picked-wrong{border-color:var(--bad); background:#fbecec; color:#7d2025}
+  .tbtn.reveal-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .verdict{font-size:14.5px; margin-top:12px; padding:11px 14px; border-radius:8px; display:none; background:var(--accent-soft); color:#234}
+  .verdict.show{display:block}
+
+  /* quiz */
+  .quiz{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 24px 24px; margin:28px 0}
+  .q{padding:20px 0; border-bottom:1px solid var(--line)} .q:last-child{border-bottom:none}
+  .q p.qtext{font-weight:600; margin:6px 0 14px}
+  .opt{display:block; width:100%; text-align:left; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:11px 14px; margin:8px 0; font:inherit; font-size:15px; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--ok); background:#eaf5ee}
+  .opt.wrong{border-color:var(--bad); background:#fbecec}
+  .opt:disabled{cursor:default}
+  .fb{font-size:14.5px; margin-top:10px; padding:11px 14px; border-radius:8px; display:none}
+  .fb.show{display:block}
+  .fb.good{background:#eaf5ee; color:#1f5c3a}
+  .fb.bad{background:#fbecec; color:#7d2025}
+  .score{font-size:15px; font-weight:600; margin-top:18px; text-align:center; color:var(--muted)}
+
+  .ask{margin-top:40px; background:#1a1a1a; color:#f3efe6; border-radius:14px; padding:22px 24px}
+  .ask b{color:#fff}
+  footer{margin-top:30px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  footer ol{padding-left:20px; margin:8px 0} footer a{color:var(--accent)}
+  @media print{ body{background:#fff;padding:0} .quiz,.ask,.triage,.vs{break-inside:avoid} .opt,.tbtn{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Lesson 5 · Trunk-Based Development</p>
+    <h1>Shipping From the Trunk</h1>
+    <div class="goal"><b>By the end of this lesson</b> you'll know what "a release" even <em>means</em> in a continuously-deployed app, why your setup ships straight from trunk instead of cutting release branches, and the one lightweight commit convention that makes your trunk history readable.</div>
+  </header>
+
+  <p class="lead">In Lessons 1–4 you got a PR onto a trunk you keep releasable. Now the question is the one your whole job title contains: as <em>release manager</em>, what do you actually <b>do</b> to ship it? The surprising answer for your stack is "almost nothing on purpose" — and understanding <em>why</em> is the lesson.</p>
+
+  <h2><span class="n">1</span>Deploy is not release</h2>
+  <p>The single idea that makes continuous deployment sane: <b>deploying</b> code and <b>releasing</b> a feature are two different events, and you control them separately.<sup><a href="#r1">1</a></sup></p>
+  <div class="signals">
+    <div class="sig"><div class="h">Deploy</div><div class="b">Your code is built and running on production infrastructure. On a Vercel/Netlify stack this happens <em>automatically</em> the moment a PR merges to <code>main</code> — no button, no ceremony.</div></div>
+    <div class="sig surface"><div class="h">Release</div><div class="b">A user can actually <em>see and use</em> the feature. This is a decision you make — often just flipping a <b>feature flag</b> on — and it can happen minutes or weeks after the deploy.</div></div>
+  </div>
+  <p>Because the two are decoupled, "incomplete" work is no longer a reason to hold a branch open. The code deploys to production the instant it merges; it simply stays <em>dark</em> behind a flag until you decide to release it.<sup><a href="#r1">1</a></sup> That's how a half-built feature rides safely on a trunk you keep releasable — the subject of Lesson 6.</p>
+  <figure>
+  <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" width="100%" role="img" aria-label="Merging to main auto-deploys to production; releasing to users is a separate flag flip">
+    <defs><marker id="a" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5b5b5b"/></marker></defs>
+    <g font-family="sans-serif" font-size="12" text-anchor="middle">
+      <rect x="18" y="78" width="120" height="46" rx="9" fill="#eef3f8" stroke="#3a6ea5"/>
+      <text x="78" y="98" fill="#3a6ea5" font-weight="700">PR merges</text>
+      <text x="78" y="114" fill="#3a6ea5" font-size="11">to main</text>
+      <line x1="138" y1="101" x2="210" y2="101" stroke="#5b5b5b" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="174" y="92" font-size="10" fill="#5b5b5b">auto</text>
+      <rect x="214" y="72" width="150" height="58" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+      <text x="289" y="94" font-weight="700" fill="#1a1a1a">DEPLOYED</text>
+      <text x="289" y="110" font-size="10.5" fill="#5b5b5b">live on prod infra</text>
+      <text x="289" y="124" font-size="10.5" fill="#b4541f">but flag OFF — dark</text>
+      <line x1="364" y1="101" x2="436" y2="101" stroke="#5b5b5b" stroke-width="1.5" marker-end="url(#a)"/>
+      <text x="400" y="92" font-size="10" fill="#5b5b5b">you decide</text>
+      <rect x="440" y="72" width="150" height="58" rx="10" fill="#e7f3ec" stroke="#2e7d52" stroke-width="2"/>
+      <text x="515" y="94" font-weight="700" fill="#2e7d52">RELEASED</text>
+      <text x="515" y="110" font-size="10.5" fill="#2e7d52">flag ON</text>
+      <text x="515" y="124" font-size="10.5" fill="#2e7d52">users see it</text>
+      <text x="400" y="158" font-size="11" fill="#5b5b5b">deploy ≠ release · the gap is yours to control</text>
+    </g>
+  </svg>
+  <figcaption>Merging auto-deploys the code to production; <em>releasing</em> it to users is a separate, later decision — usually a flag flip.<sup><a href="#r1">1</a></sup></figcaption>
+  </figure>
+
+  <h2><span class="n">2</span>Two ways to cut a release — pick one</h2>
+  <p>TBD gives you exactly two release models, and they're a genuine fork. You pick the one that matches whether you must <em>support old versions</em>.</p>
+  <div class="vs">
+    <div class="col pick">
+      <div class="h">Release from trunk<span class="tag">your default</span></div>
+      <p style="font-size:14px;margin:8px 0 0">Production is always whatever's on <code>main</code> right now. There's no release branch — a "release" is just the latest trunk going out. When something breaks, you <b>roll forward</b>: fix it on trunk and ship again.<sup><a href="#r2">2</a></sup></p>
+      <ul>
+        <li>Fits a <b>very high release cadence</b> — many merges a day.<sup><a href="#r2">2</a></sup></li>
+        <li>Nothing to maintain, harden, or back-port.</li>
+        <li>Matches your stack: one always-live SaaS, no user-installed versions.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="h">Branch for release</div>
+      <p style="font-size:14px;margin:8px 0 0">At release time you cut a <code>release/x.y</code> branch from a chosen trunk commit, harden it, and ship <em>that</em>. Trunk keeps moving; fixes are made on trunk and <b>cherry-picked</b> onto the release branch.<sup><a href="#r3">3</a></sup></p>
+      <ul>
+        <li>For products with <b>versions you must keep alive</b> — a customer pinned to v2 while you ship v3.</li>
+        <li>"Branch only when necessary, late, and instead of a freeze."<sup><a href="#r3">3</a></sup></li>
+        <li>Real overhead: a branch to maintain and back-port to.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><b>The trigger to switch — and it's the only one:</b> cut a release branch when you owe a specific shipped version ongoing support that you <em>can't</em> just roll forward — e.g. an enterprise customer contractually pinned to v2.0 for six months while trunk races ahead to v3. Until that exists, a release branch is pure overhead. Note the high-frequency rule of thumb: even teams doing <em>one</em> release a day can still branch to cherry-pick fixes, but teams releasing faster than that "do not need (and cannot use) release branches at all."<sup><a href="#r2">2</a></sup> You're in the second camp.</div>
+
+  <h2><span class="n">3</span>The roll-forward rule</h2>
+  <p>Releasing from trunk comes with one discipline that feels strange at first: when a bug reaches production, you do <b>not</b> patch production directly or scramble on a side branch. You fix the bug on trunk — like a tiny feature, just fast — and let the normal merge re-deploy it.<sup><a href="#r2">2</a></sup> "No slow down around a release and bug fixes inline."<sup><a href="#r2">2</a></sup></p>
+  <p>The reason is a rule that holds in <em>both</em> models: <b>fixes always flow trunk → production, never the reverse.</b> If you patched production (or a release branch) and forgot to put the fix on trunk, the very next deploy would re-introduce the bug. So even when you do cut a release branch, you reproduce and fix on trunk <em>first</em>, then cherry-pick — never the other way around.<sup><a href="#r3">3</a></sup> (That's the hotfix question — Lesson 7.)</p>
+  <div class="you"><b>Your move as release manager:</b> you don't "do a release." You keep the trunk releasable (Lessons 2–4), and shipping is the byproduct — a merge auto-deploys, a flag flip releases. Your active decisions shrink to two: <em>is this trunk state one I'm happy to have live?</em> and <em>is now the moment to flip this feature on for users?</em> Everything heavier than that — release branches, back-ports, version maintenance — you take on <b>only</b> when a version you must support forces your hand.</p>
+
+  <h2><span class="n">4</span>Make the trunk history readable: one commit convention</h2>
+  <p>You merge PRs with <b>squash-and-merge</b>: every branch's messy work-in-progress commits collapse into a <em>single</em> commit on <code>main</code>, and GitHub uses the <b>PR title</b> as that commit's message.<sup><a href="#r4">4</a></sup> So the PR title <em>is</em> your trunk history — the one line that lives forever. That makes it worth one cheap convention.</p>
+  <p>Adopt <b>Conventional Commits</b>, lightly: PR titles follow <code>&lt;type&gt;: &lt;description&gt;</code> in the imperative.<sup><a href="#r5">5</a></sup> You don't need every type — three carry almost all your traffic:</p>
+  <table class="cheat">
+    <tr><th>Prefix</th><th>Means</th><th>Example PR title → trunk commit</th></tr>
+    <tr><td><code>feat:</code></td><td>New user-facing capability</td><td><code>feat: add CSV export to the reports page</code></td></tr>
+    <tr><td><code>fix:</code></td><td>A bug fix</td><td><code>fix: stop dashboard crashing on empty data</code></td></tr>
+    <tr><td><code>chore:</code></td><td>Plumbing — deps, config, tooling (no user impact)</td><td><code>chore: upgrade test runner to v9</code></td></tr>
+  </table>
+  <p>Other types exist (<code>docs:</code>, <code>refactor:</code>, <code>perf:</code>, <code>test:</code>) and a <code>!</code> marks a breaking change<sup><a href="#r5">5</a></sup> — but start with the three above. Since your <em>agents</em> write the commits, this costs you nothing: put "title the PR as a Conventional Commit" in the brief, exactly like the no-<code>Co-Authored-By</code> rule. The payoff: a trunk log you can skim (<em>"what shipped this week?"</em> = read the <code>feat:</code> lines) and a free on-ramp to auto-generated release notes <em>if</em> you ever want them — without buying the version-bumping machinery now.</p>
+  <div class="callout"><b>What you're <em>not</em> adopting:</b> full semantic-release / auto-versioning tooling that computes version numbers and writes a <code>CHANGELOG.md</code> from commit history.<sup><a href="#r5">5</a></sup> That pays off for libraries and installed software with real version numbers — not a single always-live SaaS where "the version" is just "whatever's on trunk." Convention now; machinery only if a real need for a published changelog shows up.</div>
+
+  <h2><span class="n">5</span>Practice A: tag the PR title</h2>
+  <p>For each merged change, pick the Conventional Commit type its PR title should carry:</p>
+  <div class="triage" id="tag">
+    <div class="pr" data-correct="feat">
+      <div class="title">A new "Export to CSV" button on the reports page lets users download their data.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="feat">feat:</button>
+        <button class="tbtn" data-k="fix">fix:</button>
+        <button class="tbtn" data-k="chore">chore:</button>
+      </div>
+      <div class="verdict">✅ <b><code>feat:</code></b> — a new user-facing capability. This is the line you'd skim later to answer "what shipped?"</div>
+    </div>
+    <div class="pr" data-correct="fix">
+      <div class="title">The dashboard threw an error and showed a blank panel for brand-new accounts; now it shows the empty state.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="feat">feat:</button>
+        <button class="tbtn" data-k="fix">fix:</button>
+        <button class="tbtn" data-k="chore">chore:</button>
+      </div>
+      <div class="verdict">✅ <b><code>fix:</code></b> — it repairs broken behavior. (Sound familiar? It's the bug the <em>preview</em> caught in Lesson 4.)</div>
+    </div>
+    <div class="pr" data-correct="chore">
+      <div class="title">Bump the test runner from v8 to v9 and update the CI config. No change to what users see.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="feat">feat:</button>
+        <button class="tbtn" data-k="fix">fix:</button>
+        <button class="tbtn" data-k="chore">chore:</button>
+      </div>
+      <div class="verdict">✅ <b><code>chore:</code></b> — plumbing with no user impact. Keeps the noise out of your "what shipped" view.</div>
+    </div>
+  </div>
+
+  <h2><span class="n">6</span>Practice B: what's the release move?</h2>
+  <p>You're the release manager. For each situation, pick what you actually do:</p>
+  <div class="triage" id="rel">
+    <div class="pr" data-correct="merge">
+      <div class="title">A PR is reviewed, CI green, preview looked right. You want it live.</div>
+      <div class="meta"><em>What ships it?</em></div>
+      <div class="btns">
+        <button class="tbtn" data-k="merge">Just merge — it ships itself</button>
+        <button class="tbtn" data-k="roll">Roll forward on trunk</button>
+        <button class="tbtn" data-k="branch">Cut a release branch</button>
+      </div>
+      <div class="verdict">✅ <b>Just merge.</b> Merging to <code>main</code> auto-deploys to production — there's no separate "release" step. (If the feature should stay dark, that's a flag, not a branch.)</div>
+    </div>
+    <div class="pr" data-correct="roll">
+      <div class="title">A bug just reached production from the latest trunk deploy. Users are hitting it now.</div>
+      <div class="meta"><em>How do you fix it?</em></div>
+      <div class="btns">
+        <button class="tbtn" data-k="merge">Just merge — it ships itself</button>
+        <button class="tbtn" data-k="roll">Roll forward on trunk</button>
+        <button class="tbtn" data-k="branch">Cut a release branch</button>
+      </div>
+      <div class="verdict">✅ <b>Roll forward.</b> Fix it on trunk like a fast little feature and let the normal merge re-deploy. Fixes flow trunk → production, never patched in sideways.</div>
+    </div>
+    <div class="pr" data-correct="branch">
+      <div class="title">An enterprise customer is contractually pinned to v2.0 for six months — no upgrades — while you keep shipping v2.x features on trunk for everyone else.</div>
+      <div class="meta"><em>How do you support both?</em></div>
+      <div class="btns">
+        <button class="tbtn" data-k="merge">Just merge — it ships itself</button>
+        <button class="tbtn" data-k="roll">Roll forward on trunk</button>
+        <button class="tbtn" data-k="branch">Cut a release branch</button>
+      </div>
+      <div class="verdict">✅ <b>Cut a release branch.</b> This is the one trigger: a version you must keep alive that you can't just roll forward. You harden <code>release/2.0</code> and cherry-pick fixes onto it from trunk.</div>
+    </div>
+  </div>
+
+  <h2><span class="n">7</span>Check yourself</h2>
+  <div class="quiz" id="quiz">
+    <div class="q" data-correct="b">
+      <p class="qtext">1. In a continuously-deployed app, what's the difference between "deployed" and "released"?</p>
+      <button class="opt" data-k="a">They're the same event — code goes live and users see it at once.</button>
+      <button class="opt" data-k="b">Deployed = the code is running on production infrastructure (auto, on merge); released = users can actually see/use it (a separate decision, often a flag flip).</button>
+      <button class="opt" data-k="c">Deployed means it passed CI; released means it merged to <code>main</code>.</button>
+      <div class="fb good">Right. Decoupling the two is what lets unfinished code merge and deploy while staying dark behind a flag until you choose to release it.</div>
+      <div class="fb bad">Re-read §1. A merge auto-<em>deploys</em> the code to production infra; <em>releasing</em> it to users is a separate decision (usually flipping a flag). That gap is the thing you control.</div>
+    </div>
+
+    <div class="q" data-correct="a">
+      <p class="qtext">2. For your setup — one always-live SaaS, no user-installed versions, many merges a day — which release model fits?</p>
+      <button class="opt" data-k="a">Release from trunk: production is the latest <code>main</code>; no release branches to maintain.</button>
+      <button class="opt" data-k="b">Branch for release: cut a <code>release/x.y</code> branch for every deploy and harden it.</button>
+      <button class="opt" data-k="c">It doesn't matter; the two models are interchangeable.</button>
+      <div class="fb good">Yes. A very high release cadence with no versions to support is exactly the case that "does not need (and cannot use) release branches at all."</div>
+      <div class="fb bad">Re-read §2. Release branches earn their keep only when you must support a shipped version. With no installed versions and many deploys a day, they're pure overhead — you release straight from trunk.</div>
+    </div>
+
+    <div class="q" data-correct="c">
+      <p class="qtext">3. A bug reaches production from trunk. What does the roll-forward rule tell you to do?</p>
+      <button class="opt" data-k="a">SSH into production and patch the running app directly so it's fixed fastest.</button>
+      <button class="opt" data-k="b">Cut a release branch, fix it there, and leave trunk alone.</button>
+      <button class="opt" data-k="c">Fix it on trunk like a fast little feature and let the normal merge re-deploy it.</button>
+      <div class="fb good">Exactly. Fixes flow trunk → production. Patching sideways risks the next deploy re-introducing the bug.</div>
+      <div class="fb bad">Re-read §3. You roll forward: reproduce and fix on <em>trunk</em>, then let the merge ship it. A fix that isn't on trunk gets undone by the next deploy.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">4. You squash-merge PRs. Why bother titling each PR <code>feat:</code> / <code>fix:</code> / <code>chore:</code>?</p>
+      <button class="opt" data-k="a">It's required for GitHub to let you squash-merge at all.</button>
+      <button class="opt" data-k="b">The PR title becomes the single commit on <code>main</code>, so a typed title gives you a skimmable trunk history (and a free on-ramp to release notes) at near-zero cost.</button>
+      <button class="opt" data-k="c">It automatically bumps your app's version number and writes a changelog.</button>
+      <div class="fb good">Right. Squash makes the PR title your permanent trunk message; the convention makes that log readable. The auto-versioning machinery is the part you're deliberately <em>not</em> buying yet.</div>
+      <div class="fb bad">Re-read §4. Squash-merge collapses the branch into one commit titled by the PR; a Conventional title makes trunk skimmable. It does <em>not</em> auto-bump versions by itself (that's the extra tooling you're skipping), and it isn't required to squash.</div>
+    </div>
+    <div class="score" id="score">Answer the questions above to see your score.</div>
+  </div>
+
+  <div class="ask">
+    <b>Ask your teacher.</b> Good follow-ups from here:
+    <ul style="margin:10px 0 0">
+      <li>"Write me the exact brief line that tells my agent how to title PRs."</li>
+      <li>"If I'm not buying auto-versioning now, how would I turn it on later with release-please?"</li>
+      <li>"How do flags actually let me release separately from deploy? — that's Lesson 6, right?"</li>
+      <li>"Walk me through a real hotfix: roll-forward vs cherry-pick — Lesson 7."</li>
+    </ul>
+  </div>
+
+  <footer>
+    <b>Sources</b> (fetched &amp; verified 2026-06-09):
+    <ol>
+      <li id="r1"><a href="https://martinfowler.com/articles/feature-toggles.html">Feature Toggles</a> — Pete Hodgson / martinfowler.com (release toggles decouple deploying code from releasing a feature; incomplete work can ship to production hidden behind a flag).</li>
+      <li id="r2"><a href="https://trunkbaseddevelopment.com/release-from-trunk/">Release from Trunk</a> — trunkbaseddevelopment.com (teams with very high release cadence "do not need (and cannot use) release branches at all"; roll forward and fix on trunk "as if it were a feature"; "no slow down around a release and bug fixes inline").</li>
+      <li id="r3"><a href="https://trunkbaseddevelopment.com/branch-for-release/">Branch for Release</a> — trunkbaseddevelopment.com ("branch only when necessary… late, and instead of freeze"; fix on trunk first, then cherry-pick to the release branch; never fix on the release branch expecting to back-port).</li>
+      <li id="r4"><a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges">About pull request merges</a> — GitHub Docs (squash and merge combines a PR's commits into one; the default commit message comes from the PR title when there's more than one commit).</li>
+      <li id="r5"><a href="https://www.conventionalcommits.org/en/v1.0.0/">Conventional Commits 1.0.0</a> (structure <code>&lt;type&gt;[scope]: &lt;description&gt;</code>; <code>feat</code>=MINOR, <code>fix</code>=PATCH, <code>!</code>/<code>BREAKING CHANGE</code>=MAJOR; other types like <code>chore</code>/<code>docs</code>/<code>refactor</code> are optional).</li>
+    </ol>
+    See <code>reference/glossary.html</code> for terms · builds on Lesson 4's three review signals · feeds Lessons 6 (flags) &amp; 7 (hotfixes).
+  </footer>
+</div>
+
+<script>
+  // shared scenario / tagging widgets (both #tag and #rel)
+  document.querySelectorAll('.triage .pr').forEach(pr => {
+    const key = pr.dataset.correct;
+    const btns = pr.querySelectorAll('.tbtn');
+    const verdict = pr.querySelector('.verdict');
+    btns.forEach(b => b.addEventListener('click', () => {
+      if (pr.dataset.done) return; pr.dataset.done = '1';
+      const right = b.dataset.k === key;
+      btns.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add(o === b ? 'picked-right' : 'reveal-right');
+        else if (o === b) o.classList.add('picked-wrong'); });
+      verdict.classList.add('show');
+    }));
+  });
+  // quiz
+  let answered = 0, correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    const key = q.dataset.correct;
+    const opts = q.querySelectorAll('.opt');
+    const good = q.querySelector('.fb.good'), bad = q.querySelector('.fb.bad');
+    opts.forEach(opt => opt.addEventListener('click', () => {
+      if (q.dataset.done) return; q.dataset.done = '1'; answered++;
+      const right = opt.dataset.k === key; if (right) correct++;
+      opts.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add('correct');
+        else if (o === opt) o.classList.add('wrong'); });
+      (right ? good : bad).classList.add('show');
+      document.getElementById('score').textContent = correct + ' / ' + answered + ' so far' +
+        (answered === 4 ? (correct === 4 ? ' — you ship by keeping trunk releasable, not by ceremony. Ready for Lesson 6.' : ' — check the highlighted answers, then ask me anything.') : '');
+    }));
+  });
+</script>
+</body>
+</html>
