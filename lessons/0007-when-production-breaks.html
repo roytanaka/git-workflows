@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 7 · When Production Breaks</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b5b5b; --line:#e3e0d8; --bg:#faf8f3; --card:#fff;
+    --accent:#3a6ea5; --accent-soft:#eef3f8; --trunk:#2e7d52; --trunk-soft:#e7f3ec;
+    --warn:#b4541f; --warn-soft:#fbeee5; --ok:#2e7d52; --bad:#b4292f;
+  }
+  *{box-sizing:border-box}
+  body{font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:48px 20px}
+  .wrap{max-width:760px; margin:0 auto}
+  header{border-bottom:3px solid var(--ink); padding-bottom:18px}
+  .kicker{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0}
+  h1{font-size:33px; margin:8px 0 6px; letter-spacing:-.015em; line-height:1.15}
+  .goal{background:var(--accent-soft); border-left:4px solid var(--accent); padding:12px 16px; margin:18px 0 0; border-radius:0 8px 8px 0; font-size:15px}
+  .goal b{color:var(--accent)}
+  h2{font-size:23px; margin:44px 0 6px; letter-spacing:-.01em}
+  h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:8px}
+  p{margin:14px 0}
+  .lead{font-size:19px}
+  a{color:var(--accent)}
+  sup a{text-decoration:none; font-weight:700; font-size:12px; padding:0 1px}
+  code{background:#efece4; padding:1.5px 5px; border-radius:5px; font-size:14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin:20px 0}
+  .callout{background:var(--warn-soft); border-left:4px solid var(--warn); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .callout b{color:var(--warn)}
+  .you{background:var(--trunk-soft); border-left:4px solid var(--trunk); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .you b{color:var(--trunk)}
+  ul{margin:14px 0; padding-left:22px} li{margin:7px 0}
+  figure{margin:26px 0; text-align:center}
+  figcaption{font-size:13px; color:var(--muted); margin-top:10px}
+
+  /* two-clock band */
+  .clocks{display:flex; gap:12px; flex-wrap:wrap; margin:22px 0}
+  .clock{flex:1 1 240px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+  .clock .h{font-weight:800; font-size:15px}
+  .clock .speed{font-size:12px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; margin-top:3px}
+  .clock .b{font-size:14px; color:#333; margin-top:8px}
+  .clock.fast{border-color:var(--warn)}
+  .clock.fast .h, .clock.fast .speed{color:var(--warn)}
+  .clock.calm{border-color:var(--trunk)}
+  .clock.calm .h, .clock.calm .speed{color:var(--trunk)}
+
+  /* decision ladder (shared shape with Lesson 6) */
+  .ladder{margin:22px 0}
+  .rung{display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; padding:15px 18px; margin:12px 0}
+  .rung.pick{border:2px solid var(--trunk); background:var(--trunk-soft)}
+  .rung .lvl{flex:0 0 auto; font-weight:800; font-size:13px; color:#fff; background:var(--accent);
+    border-radius:8px; padding:4px 10px; margin-top:2px}
+  .rung.pick .lvl{background:var(--trunk)}
+  .rung .h{font-weight:800; font-size:16px}
+  .rung .b{font-size:14px; color:#333; margin-top:3px}
+  .rung .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    background:var(--trunk); color:#fff; padding:2px 9px; border-radius:20px; margin-left:8px; vertical-align:middle}
+  .rung.rare .lvl{background:var(--muted)}
+
+  /* scenario / tagging widget (shared with earlier lessons) */
+  .triage{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 22px 20px; margin:26px 0}
+  .pr{border:1px solid var(--line); border-radius:11px; padding:14px 16px; margin:16px 0}
+  .pr .title{font-weight:700; font-size:16px}
+  .pr .meta{font-size:13.5px; color:#333; margin:5px 0 4px}
+  .pr .meta em{color:var(--muted)}
+  .btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+  .tbtn{flex:1 1 22%; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:9px 10px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:.12s}
+  .tbtn:hover{border-color:var(--accent)}
+  .tbtn:disabled{cursor:default; opacity:.85}
+  .tbtn.picked-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .tbtn.picked-wrong{border-color:var(--bad); background:#fbecec; color:#7d2025}
+  .tbtn.reveal-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .verdict{font-size:14.5px; margin-top:12px; padding:11px 14px; border-radius:8px; display:none; background:var(--accent-soft); color:#234}
+  .verdict.show{display:block}
+
+  /* quiz */
+  .quiz{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 24px 24px; margin:28px 0}
+  .q{padding:20px 0; border-bottom:1px solid var(--line)} .q:last-child{border-bottom:none}
+  .q p.qtext{font-weight:600; margin:6px 0 14px}
+  .opt{display:block; width:100%; text-align:left; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:11px 14px; margin:8px 0; font:inherit; font-size:15px; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--ok); background:#eaf5ee}
+  .opt.wrong{border-color:var(--bad); background:#fbecec}
+  .opt:disabled{cursor:default}
+  .fb{font-size:14.5px; margin-top:10px; padding:11px 14px; border-radius:8px; display:none}
+  .fb.show{display:block}
+  .fb.good{background:#eaf5ee; color:#1f5c3a}
+  .fb.bad{background:#fbecec; color:#7d2025}
+  .score{font-size:15px; font-weight:600; margin-top:18px; text-align:center; color:var(--muted)}
+
+  .ask{margin-top:40px; background:#1a1a1a; color:#f3efe6; border-radius:14px; padding:22px 24px}
+  .ask b{color:#fff}
+  footer{margin-top:30px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  footer ol{padding-left:20px; margin:8px 0} footer a{color:var(--accent)}
+  @media print{ body{background:#fff;padding:0} .quiz,.ask,.triage,.ladder,.clocks{break-inside:avoid} .opt,.tbtn{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Lesson 7 · Trunk-Based Development</p>
+    <h1>When Production Breaks</h1>
+    <div class="goal"><b>By the end of this lesson</b> you'll know that a "hotfix" isn't a special process but the roll-forward rule under a stopwatch — that an incident runs on <em>two clocks</em> (stop the bleed fast, fix the cause calmly), that your fastest mitigation is the flag kill switch you already built, why a <em>revert</em> is roll-forward and not a rollback, and the decision ladder for getting production healthy without making it worse.</div>
+  </header>
+
+  <p class="lead">This is the lesson where the last two pay off. Lesson 5 left you the roll-forward rule; Lesson 6 left you a kill switch. Now production is broken, users are hitting the bug <em>right now</em>, and your one job as release manager is to pick the move — fast, and without lighting a second fire while you fight the first.</p>
+
+  <h2><span class="n">1</span>A hotfix is the roll-forward rule under a stopwatch</h2>
+  <p>The instinct under pressure is to invent a special emergency process — a dedicated <code>hotfix/</code> branch, an SSH session into the production box, a frantic rewrite shipped without review. Trunk-based development says: <b>don't.</b> A hotfix is the exact same trunk&nbsp;→&nbsp;production fix you already know from Lesson 5, just done fast.<sup><a href="#r1">1</a></sup> The skill isn't a new procedure — it's keeping your head and splitting the incident into <b>two clocks that run at different speeds</b>:</p>
+  <div class="clocks">
+    <div class="clock fast">
+      <div class="h">Mitigation</div>
+      <div class="speed">Seconds → minutes</div>
+      <div class="b"><b>Stop the bleed.</b> Shrink the blast radius <em>now</em>. It doesn't have to be pretty, permanent, or even a code change — it just has to make users stop hitting the bug.</div>
+    </div>
+    <div class="clock calm">
+      <div class="h">Remediation</div>
+      <div class="speed">Minutes → hours</div>
+      <div class="b"><b>Fix the cause.</b> The real fix, on trunk, at a calm reviewed pace — through the same CI&nbsp;+&nbsp;diff&nbsp;+&nbsp;preview gate as any other change. No stopwatch on this one, because mitigation already bought you the time.</div>
+    </div>
+  </div>
+  <p>The classic hotfix disaster is <b>conflating the two</b> — hand-coding a root-cause fix under fire and shipping it unreviewed, which is exactly how a hotfix causes the <em>second</em> incident. Separate the clocks and the panic drains out: mitigate first to buy time, then remediate properly.</p>
+  <figure>
+  <svg viewBox="0 0 680 210" xmlns="http://www.w3.org/2000/svg" width="100%" role="img" aria-label="A bug goes live in production, then splits into two tracks: a short fast mitigation track that contains the blast radius in seconds, and a longer calm remediation track that fixes the root cause on trunk through normal review.">
+    <defs><marker id="a" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5b5b5b"/></marker></defs>
+    <g font-family="sans-serif" font-size="12">
+      <!-- incident -->
+      <circle cx="48" cy="105" r="13" fill="#fbecec" stroke="#b4292f" stroke-width="2"/>
+      <text x="48" y="109" text-anchor="middle" font-size="13" fill="#b4292f">!</text>
+      <text x="48" y="140" text-anchor="middle" font-size="10.5" fill="#b4292f">bug live in prod</text>
+      <!-- split -->
+      <path d="M64,99 C110,80 130,58 176,58" fill="none" stroke="#b4541f" stroke-width="1.5" marker-end="url(#a)"/>
+      <path d="M64,111 C110,130 130,152 176,152" fill="none" stroke="#3a6ea5" stroke-width="1.5" marker-end="url(#a)"/>
+      <!-- mitigation track (fast/short) -->
+      <text x="180" y="38" font-size="11" font-weight="700" fill="#b4541f">CLOCK 1 · MITIGATE — stop the bleed</text>
+      <rect x="180" y="46" width="170" height="30" rx="8" fill="#fbeee5" stroke="#b4541f"/>
+      <text x="265" y="65" text-anchor="middle" font-size="11.5" font-weight="700" fill="#b4541f">flag off / revert</text>
+      <line x1="350" y1="61" x2="408" y2="61" stroke="#5b5b5b" stroke-width="1.5" marker-end="url(#a)"/>
+      <rect x="412" y="46" width="172" height="30" rx="8" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+      <text x="498" y="65" text-anchor="middle" font-size="11" fill="#1a1a1a">blast radius contained</text>
+      <text x="498" y="92" text-anchor="middle" font-size="10" fill="#b4541f">seconds–minutes</text>
+      <!-- remediation track (calm/long) -->
+      <text x="180" y="132" font-size="11" font-weight="700" fill="#3a6ea5">CLOCK 2 · REMEDIATE — fix the cause</text>
+      <rect x="180" y="140" width="404" height="30" rx="8" fill="#eef3f8" stroke="#3a6ea5"/>
+      <text x="382" y="159" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3a6ea5">fix root cause on trunk · CI + diff + preview · merge</text>
+      <text x="382" y="190" text-anchor="middle" font-size="10" fill="#3a6ea5">calm, reviewed — no stopwatch, because Clock 1 bought the time</text>
+    </g>
+  </svg>
+  <figcaption>One incident, two clocks. Mitigation contains the damage in seconds so remediation never has to race — the real fix goes through the normal review gate, unhurried.</figcaption>
+  </figure>
+
+  <h2><span class="n">2</span>Your fastest mitigation needs no code at all</h2>
+  <p>Here's the moment Lesson 6's <b>ops toggle</b> earns its entire keep. If the thing that's broken is sitting behind a flag, your fastest, safest mitigation is to <b>flip the flag off</b> — seconds, no deploy, no PR, no reviewing-a-fix-while-the-building-burns.<sup><a href="#r2">2</a></sup> A kill switch turns the bug invisible to users at runtime, and it does it without touching the code at all.</p>
+  <p>That reframes the whole incident. The first question isn't "how fast can we ship a fix?" It's "<b>can we stop the bleed without shipping anything?</b>" When the answer is yes, you've converted a sev-1 fire-drill into a calm, reviewed fix you can land on Monday — because the users are already safe.</p>
+  <div class="you"><b>Your move as director:</b> the very first question you ask in an incident is "<em>is the broken thing behind a flag we can flip?</em>" If it is, flip it, breathe, and move the root-cause fix onto Clock&nbsp;2. This is the payoff you bought back in Lesson 6 when you put risky features behind a kill switch instead of shipping them naked — the insurance you hoped you'd never need is exactly what's saving you now.</div>
+
+  <h2><span class="n">3</span>No flag? A revert is roll-forward, not a rollback</h2>
+  <p>When there's no flag to flip, the next-fastest mitigation is to take the bad change back out. The trap — and it's the same one from Lesson 5 — is to "roll back" by <b>redeploying yesterday's build</b>. That makes the symptom vanish for a moment, but the bug is <em>still on trunk</em>: the very next merge re-deploys it, and you're back on fire.<sup><a href="#r1">1</a></sup></p>
+  <p>The trunk-based move is to <b>revert on trunk</b>. On GitHub that's literally the <b>Revert</b> button on the offending PR: it opens a <em>new</em> PR containing a revert of the merge commit, which you merge like any other change.<sup><a href="#r3">3</a></sup> History is preserved, nothing is patched sideways, and the undo flows trunk&nbsp;→&nbsp;production exactly like every other fix. A revert isn't a step <em>backward</em> in history — it's a new commit <em>forward</em> that happens to undo an old one. That's why it counts as roll-forward.</p>
+  <div class="callout"><b>This is where small PRs cash out.</b> A small, single-purpose PR (Lesson 3) reverts cleanly — one tidy commit comes out and trunk is healthy. A 2,000-line tangle that touched a dozen unrelated things does <em>not</em> revert cleanly; you can't pull one thread without unravelling the others. The reversibility you bought by keeping PRs small is never more valuable than at 2&nbsp;a.m.<sup><a href="#r4">4</a></sup></div>
+
+  <h2><span class="n">4</span>The decision ladder: get production healthy, fastest first</h2>
+  <p>Put it together as a ladder. When production breaks, take the <b>highest rung you can reach</b> — they're ordered by how fast and how low-risk they are. The top two are <em>mitigations</em> (Clock&nbsp;1); they buy the time to remediate calmly on the rungs below.</p>
+  <div class="ladder">
+    <div class="rung pick">
+      <div class="lvl">1</div>
+      <div>
+        <div class="h">Flip the flag off<span class="tag">fastest</span></div>
+        <div class="b">The broken feature is behind a flag → kill-switch it. Seconds, no deploy, no code change. If you can reach this rung, you almost always should: it's the lowest-risk move there is.<sup><a href="#r2">2</a></sup></div>
+      </div>
+    </div>
+    <div class="rung">
+      <div class="lvl">2</div>
+      <div>
+        <div class="h">Revert on trunk</div>
+        <div class="b">No flag, but you can point at the bad change → hit <b>Revert</b> on its PR and ship the revert. Minutes, and trunk is back to its last known-good state — through the normal pipeline, no sideways patching.<sup><a href="#r3">3</a></sup></div>
+      </div>
+    </div>
+    <div class="rung">
+      <div class="lvl">3</div>
+      <div>
+        <div class="h">Roll forward a fix</div>
+        <div class="b">You can't simply remove the change (it's woven into shared code, or the bug predates any one PR) → fix it on trunk like a fast little feature and let the merge re-deploy. This is also where <em>remediation</em> lives after you've mitigated on rung 1 or 2.<sup><a href="#r1">1</a></sup></div>
+      </div>
+    </div>
+    <div class="rung rare">
+      <div class="lvl">4</div>
+      <div>
+        <div class="h">Cherry-pick to a release branch <span class="tag" style="background:var(--muted)">rare</span></div>
+        <div class="b">Only if you owe the fix to a specific <em>supported version</em> you can't roll forward — the one Lesson 5 trigger. Fix on trunk <b>first</b>, then cherry-pick that commit onto the release branch — never the reverse.<sup><a href="#r5">5</a></sup></div>
+      </div>
+    </div>
+  </div>
+  <div class="you"><b>Your move as director:</b> default to the highest rung available, and resist the urge to skip straight to rung 3 and hand-author a fix under fire. Rungs 1 and 2 cost almost nothing and make the users safe <em>before</em> anyone writes a line of code — which is the whole point of splitting the clocks. The rushed, unreviewed fix is the move that turns one incident into two.</div>
+
+  <h2><span class="n">5</span>Reviewing under fire — and the branch you're <em>not</em> cutting</h2>
+  <p>Even a hotfix PR gets all three review signals from Lesson 4 — CI, the diff, and the preview. The reason you <em>can</em> hold that bar under pressure is that you mitigated first: because the flag is off or the revert already shipped, the root-cause fix isn't racing a stopwatch, so it goes through the gate like anything else. For the fix PR itself, the discipline tightens to the S·S·S rubric (Lesson 3): the <b>smallest possible diff</b>, <b>single purpose</b>, and <b>easy to revert</b> — those properties matter most precisely when the stakes are highest.</p>
+  <p>And notice what you are <em>not</em> doing: spinning up a GitFlow-style <code>hotfix/</code> branch off a production tag, fixing it in isolation, then merging it back into two long-lived branches. For a team that <b>releases from trunk, that ceremony is pointless</b> — trunk <em>is</em> production, so the fix just goes on trunk.<sup><a href="#r1">1</a></sup> The only time a separate branch re-enters the picture is the rung-4 supported-version cherry-pick — and even then the fix is born on trunk first.</p>
+  <div class="callout"><b>Watch for these under pressure:</b> a PR that asks to skip CI or the preview "because it's urgent"; an SSH patch straight to the running server; or a "rollback" that just redeploys an old build and leaves trunk broken. Each one either re-breaks on the next deploy or ships an unreviewed change into a fire. The answer is always the same shape: <b>mitigate first</b> (flag or revert), <b>then remediate calmly</b> through the normal gate.</div>
+
+  <h2><span class="n">6</span>Practice A: what's your first move?</h2>
+  <p>Production just broke. For each incident, pick the highest rung that gets users safe:</p>
+  <div class="triage" id="ladder">
+    <div class="pr" data-correct="flag">
+      <div class="title">A newly-released recommendations panel is throwing errors for half your users. It's behind a flag you control.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="flag">Flip the flag off</button>
+        <button class="tbtn" data-k="revert">Revert on trunk</button>
+        <button class="tbtn" data-k="forward">Roll forward a fix</button>
+        <button class="tbtn" data-k="cherry">Cherry-pick to a release branch</button>
+      </div>
+      <div class="verdict">✅ <b>Flip the flag off.</b> Rung 1 — seconds, no deploy, no code. Users are safe instantly; the real fix moves to Clock 2 and lands calmly later.</div>
+    </div>
+    <div class="pr" data-correct="revert">
+      <div class="title">A PR merged an hour ago crashes the homepage. There's no flag, but the change is self-contained and can simply come back out.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="flag">Flip the flag off</button>
+        <button class="tbtn" data-k="revert">Revert on trunk</button>
+        <button class="tbtn" data-k="forward">Roll forward a fix</button>
+        <button class="tbtn" data-k="cherry">Cherry-pick to a release branch</button>
+      </div>
+      <div class="verdict">✅ <b>Revert on trunk.</b> No flag to flip, but you can name the bad change — hit Revert on its PR and ship the new revert commit. Trunk is back to known-good in minutes.</div>
+    </div>
+    <div class="pr" data-correct="forward">
+      <div class="title">Checkout is applying the wrong tax rate — a one-line bug deep in shared billing code that other working features also depend on. You can't just remove it.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="flag">Flip the flag off</button>
+        <button class="tbtn" data-k="revert">Revert on trunk</button>
+        <button class="tbtn" data-k="forward">Roll forward a fix</button>
+        <button class="tbtn" data-k="cherry">Cherry-pick to a release branch</button>
+      </div>
+      <div class="verdict">✅ <b>Roll forward a fix.</b> No flag, and reverting would tear out shared code other features need. Fix the line on trunk like a fast little feature and let the merge re-deploy.</div>
+    </div>
+    <div class="pr" data-correct="cherry">
+      <div class="title">An enterprise customer pinned to <code>release/2.0</code> for six months hits a bug that trunk (now on v2.4) already fixed. They can't take the upgrade.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="flag">Flip the flag off</button>
+        <button class="tbtn" data-k="revert">Revert on trunk</button>
+        <button class="tbtn" data-k="forward">Roll forward a fix</button>
+        <button class="tbtn" data-k="cherry">Cherry-pick to a release branch</button>
+      </div>
+      <div class="verdict">✅ <b>Cherry-pick to the release branch.</b> The one rung-4 case: a supported version you can't roll forward. The fix already exists on trunk — copy that commit onto <code>release/2.0</code>, never the reverse.</div>
+    </div>
+  </div>
+
+  <h2><span class="n">7</span>Practice B: which clock is it on?</h2>
+  <p>Sort each action into the two clocks. Mitigation stops the bleed (fast, can be temporary); remediation fixes the cause (calm, reviewed):</p>
+  <div class="triage" id="clock">
+    <div class="pr" data-correct="mit">
+      <div class="title">Flip the broken feature's kill switch off so users stop hitting the bug right now.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="mit">Mitigation</button>
+        <button class="tbtn" data-k="rem">Remediation</button>
+      </div>
+      <div class="verdict">✅ <b>Mitigation</b> — Clock 1. Stops the bleed in seconds without a code change. It's not the fix; it's what buys time for the fix.</div>
+    </div>
+    <div class="pr" data-correct="mit">
+      <div class="title">Open and merge a revert of the bad PR to get trunk back to its last known-good state.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="mit">Mitigation</button>
+        <button class="tbtn" data-k="rem">Remediation</button>
+      </div>
+      <div class="verdict">✅ <b>Mitigation</b> — Clock 1. A fast undo that contains the damage. The root cause still needs a real fix afterward.</div>
+    </div>
+    <div class="pr" data-correct="rem">
+      <div class="title">Reproduce the bug with a failing test, fix the root cause on trunk, and ship it through the normal CI + preview review.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="mit">Mitigation</button>
+        <button class="tbtn" data-k="rem">Remediation</button>
+      </div>
+      <div class="verdict">✅ <b>Remediation</b> — Clock 2. The real fix, done calmly through the full gate because mitigation already made users safe.</div>
+    </div>
+    <div class="pr" data-correct="rem">
+      <div class="title">Harden the fragile input handling so this whole class of bug can't recur, as a normal reviewed PR.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="mit">Mitigation</button>
+        <button class="tbtn" data-k="rem">Remediation</button>
+      </div>
+      <div class="verdict">✅ <b>Remediation</b> — Clock 2. Fixing the cause (and the class) at a calm pace. No stopwatch on this one — that's the point of splitting the clocks.</div>
+    </div>
+  </div>
+
+  <h2><span class="n">8</span>Check yourself</h2>
+  <div class="quiz" id="quiz">
+    <div class="q" data-correct="c">
+      <p class="qtext">1. In trunk-based development, a "hotfix" is best understood as…</p>
+      <button class="opt" data-k="a">A special emergency process with its own dedicated <code>hotfix/</code> branch cut off the production tag.</button>
+      <button class="opt" data-k="b">A direct patch to the running production server, applied as fast as possible.</button>
+      <button class="opt" data-k="c">The same trunk → production fix you already use, just done fast — the roll-forward rule under a stopwatch.</button>
+      <div class="fb good">Right. There's no separate hotfix procedure for a release-from-trunk team — trunk <em>is</em> production, so the fix goes on trunk like any other change, only quickly.</div>
+      <div class="fb bad">Re-read §1 and §5. A <code>hotfix/</code> branch is GitFlow ceremony you're not adopting, and patching the server sideways gets undone by the next deploy. A hotfix is just roll-forward, fast.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">2. Production is broken and the failing feature is behind a flag you control. Fastest safe move?</p>
+      <button class="opt" data-k="a">Start writing the root-cause fix immediately and rush it through review.</button>
+      <button class="opt" data-k="b">Flip the flag off — kill the feature at runtime, no deploy, then fix the cause calmly.</button>
+      <button class="opt" data-k="c">Redeploy last night's build to make the symptom disappear.</button>
+      <div class="fb good">Exactly. The kill switch is rung 1 — seconds, no code, users safe instantly. That's the insurance you bought in Lesson 6 paying off.</div>
+      <div class="fb bad">Re-read §2. When the broken thing is behind a flag, the fastest, lowest-risk mitigation is to flip it off — no deploy, no reviewing-a-fix-under-fire. The real fix then moves to Clock 2.</div>
+    </div>
+
+    <div class="q" data-correct="a">
+      <p class="qtext">3. There's no flag, and a recently-merged PR is clearly the culprit. To get trunk healthy fast, you…</p>
+      <button class="opt" data-k="a">Revert the bad PR on trunk — a new commit that undoes the merge — and let it deploy normally.</button>
+      <button class="opt" data-k="b">Redeploy the previous build and leave trunk as it is.</button>
+      <button class="opt" data-k="c">Delete the bad commit from history so it never happened.</button>
+      <div class="fb good">Right. A revert is a new commit <em>forward</em> that undoes an old one — it flows trunk → production and preserves history. That's roll-forward, not a rollback.</div>
+      <div class="fb bad">Re-read §3. Redeploying an old build leaves the bug on trunk, so the next merge re-ships it; deleting history is neither safe nor necessary. Revert on trunk and let the revert deploy.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">4. Why split an incident into "mitigation" and "remediation"?</p>
+      <button class="opt" data-k="a">They're the same thing; the split is just jargon.</button>
+      <button class="opt" data-k="b">So you can stop the bleed fast <em>without</em> shipping a rushed, unreviewed root-cause fix — the real fix then goes through the normal gate, unhurried.</button>
+      <button class="opt" data-k="c">So you can skip review on both, since the situation is urgent.</button>
+      <div class="fb good">Exactly. Mitigation (flag off / revert) makes users safe in seconds; that bought time lets remediation go through CI + diff + preview calmly. Conflating them is how a hotfix causes the second incident.</div>
+      <div class="fb bad">Re-read §1. The two clocks run at different speeds on purpose: mitigate fast to remove the pressure, then remediate properly through the full review gate. Urgency is the reason to keep the bar, not drop it.</div>
+    </div>
+    <div class="score" id="score">Answer the questions above to see your score.</div>
+  </div>
+
+  <div class="ask">
+    <b>Ask your teacher.</b> You've reached the end of the core path — good places to go next:
+    <ul style="margin:10px 0 0">
+      <li>"Write me the incident playbook as a one-pager: the two clocks and the four-rung ladder."</li>
+      <li>"How would I even <em>detect</em> a production bug fast — what monitoring/alerting belongs on a greenfield SaaS?"</li>
+      <li>"After the fire's out, what should a blameless incident retro actually produce?"</li>
+      <li>"Can my preview-deploy and CI gates be configured to make the unreviewed 'urgent' hotfix literally impossible?"</li>
+      <li>"Back to the thing I flagged early on — how do I partition work across several agents so their PRs never collide?"</li>
+    </ul>
+  </div>
+
+  <footer>
+    <b>Sources</b> (fetched &amp; verified 2026-06-09; revert doc verified 2026-06-10):
+    <ol>
+      <li id="r1"><a href="https://trunkbaseddevelopment.com/release-from-trunk/">Release from Trunk</a> — trunkbaseddevelopment.com (roll forward and fix the bug on trunk "as if it were a feature"; "no slow down around a release and bug fixes inline"; very-high-cadence teams release straight from trunk with no release branch).</li>
+      <li id="r2"><a href="https://martinfowler.com/articles/feature-toggles.html">Feature Toggles</a> — Pete Hodgson / martinfowler.com (the <em>ops toggle</em> / kill switch: disable a feature fast in production without a deploy — the fastest mitigation).</li>
+      <li id="r3"><a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/reverting-a-pull-request">Reverting a pull request</a> — GitHub Docs ("reverting a pull request… creates a new pull request that contains one revert of the merge commit from the original merged pull request" — preserves history, undoes forward).</li>
+      <li id="r4"><a href="https://linearb.io/blog/the-pull-request-paradox-merge-faster-by-promoting-your-pr">The pull-request paradox</a> — LinearB (smaller PRs review and merge faster and are easier to revert — why small, single-purpose changes pay off when you need to undo one).</li>
+      <li id="r5"><a href="https://trunkbaseddevelopment.com/branch-for-release/">Branch for Release</a> — trunkbaseddevelopment.com (fix on trunk first, then cherry-pick onto the release branch; never fix on the release branch expecting to back-port — the rung-4 supported-version case).</li>
+    </ol>
+    See <code>reference/glossary.html</code> for terms · pays off Lesson 5's roll-forward rule &amp; Lesson 6's kill switch · closes the core trunk-based path.
+  </footer>
+</div>
+
+<script>
+  // shared scenario / tagging widgets (#ladder and #clock)
+  document.querySelectorAll('.triage .pr').forEach(pr => {
+    const key = pr.dataset.correct;
+    const btns = pr.querySelectorAll('.tbtn');
+    const verdict = pr.querySelector('.verdict');
+    btns.forEach(b => b.addEventListener('click', () => {
+      if (pr.dataset.done) return; pr.dataset.done = '1';
+      btns.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add(o === b ? 'picked-right' : 'reveal-right');
+        else if (o === b) o.classList.add('picked-wrong'); });
+      verdict.classList.add('show');
+    }));
+  });
+  // quiz
+  let answered = 0, correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    const key = q.dataset.correct;
+    const opts = q.querySelectorAll('.opt');
+    const good = q.querySelector('.fb.good'), bad = q.querySelector('.fb.bad');
+    opts.forEach(opt => opt.addEventListener('click', () => {
+      if (q.dataset.done) return; q.dataset.done = '1'; answered++;
+      const right = opt.dataset.k === key; if (right) correct++;
+      opts.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add('correct');
+        else if (o === opt) o.classList.add('wrong'); });
+      (right ? good : bad).classList.add('show');
+      document.getElementById('score').textContent = correct + ' / ' + answered + ' so far' +
+        (answered === 4 ? (correct === 4 ? ' — you can fight a production fire without lighting a second one. That closes the core path.' : ' — check the highlighted answers, then ask me anything.') : '');
+    }));
+  });
+</script>
+</body>
+</html>
