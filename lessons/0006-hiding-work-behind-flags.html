@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 6 · Hiding Work Behind Flags</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b5b5b; --line:#e3e0d8; --bg:#faf8f3; --card:#fff;
+    --accent:#3a6ea5; --accent-soft:#eef3f8; --trunk:#2e7d52; --trunk-soft:#e7f3ec;
+    --warn:#b4541f; --warn-soft:#fbeee5; --ok:#2e7d52; --bad:#b4292f;
+  }
+  *{box-sizing:border-box}
+  body{font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:48px 20px}
+  .wrap{max-width:760px; margin:0 auto}
+  header{border-bottom:3px solid var(--ink); padding-bottom:18px}
+  .kicker{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0}
+  h1{font-size:33px; margin:8px 0 6px; letter-spacing:-.015em; line-height:1.15}
+  .goal{background:var(--accent-soft); border-left:4px solid var(--accent); padding:12px 16px; margin:18px 0 0; border-radius:0 8px 8px 0; font-size:15px}
+  .goal b{color:var(--accent)}
+  h2{font-size:23px; margin:44px 0 6px; letter-spacing:-.01em}
+  h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:8px}
+  p{margin:14px 0}
+  .lead{font-size:19px}
+  a{color:var(--accent)}
+  sup a{text-decoration:none; font-weight:700; font-size:12px; padding:0 1px}
+  code{background:#efece4; padding:1.5px 5px; border-radius:5px; font-size:14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin:20px 0}
+  .callout{background:var(--warn-soft); border-left:4px solid var(--warn); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .callout b{color:var(--warn)}
+  .you{background:var(--trunk-soft); border-left:4px solid var(--trunk); padding:14px 18px; border-radius:0 8px 8px 0; margin:20px 0}
+  .you b{color:var(--trunk)}
+  ul{margin:14px 0; padding-left:22px} li{margin:7px 0}
+  figure{margin:26px 0; text-align:center}
+  figcaption{font-size:13px; color:var(--muted); margin-top:10px}
+
+  /* code block for the wrapper snippet */
+  pre{background:#1d2430; color:#e7ecf3; border-radius:11px; padding:16px 18px; overflow-x:auto;
+    font:13.5px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; margin:18px 0}
+  pre .c{color:#8aa0b8} pre .k{color:#9ad1a0} pre .s{color:#e6c08a} pre .v{color:#9fc4ef}
+  .cap{font-size:12.5px; color:var(--muted); margin:-8px 0 22px; text-align:center}
+
+  /* four toggle types */
+  .types{display:flex; gap:12px; flex-wrap:wrap; margin:22px 0}
+  .type{flex:1 1 210px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:15px 17px}
+  .type .h{font-weight:800; color:var(--accent); font-size:15px}
+  .type .b{font-size:13.5px; color:#333; margin-top:5px}
+  .type .life{font-size:12px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; margin-top:9px}
+  .type.short{border-color:var(--warn)}
+  .type.short .h{color:var(--warn)} .type.short .life{color:var(--warn)}
+  .type.long .life{color:var(--trunk)}
+
+  /* decision ladder */
+  .ladder{margin:22px 0}
+  .rung{display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; padding:15px 18px; margin:12px 0}
+  .rung.pick{border:2px solid var(--trunk); background:var(--trunk-soft)}
+  .rung .lvl{flex:0 0 auto; font-weight:800; font-size:13px; color:#fff; background:var(--accent);
+    border-radius:8px; padding:4px 10px; margin-top:2px}
+  .rung.pick .lvl{background:var(--trunk)}
+  .rung .h{font-weight:800; font-size:16px}
+  .rung .b{font-size:14px; color:#333; margin-top:3px}
+  .rung .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    background:var(--trunk); color:#fff; padding:2px 9px; border-radius:20px; margin-left:8px; vertical-align:middle}
+  .alts{font-size:13.5px; color:var(--muted); margin-top:6px}
+
+  /* scenario / tagging widget (shared with earlier lessons) */
+  .triage{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 22px 20px; margin:26px 0}
+  .pr{border:1px solid var(--line); border-radius:11px; padding:14px 16px; margin:16px 0}
+  .pr .title{font-weight:700; font-size:16px}
+  .pr .meta{font-size:13.5px; color:#333; margin:5px 0 4px}
+  .pr .meta em{color:var(--muted)}
+  .btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+  .tbtn{flex:1 1 30%; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:9px 10px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:.12s}
+  .tbtn:hover{border-color:var(--accent)}
+  .tbtn:disabled{cursor:default; opacity:.85}
+  .tbtn.picked-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .tbtn.picked-wrong{border-color:var(--bad); background:#fbecec; color:#7d2025}
+  .tbtn.reveal-right{border-color:var(--ok); background:#eaf5ee; color:#1f5c3a}
+  .verdict{font-size:14.5px; margin-top:12px; padding:11px 14px; border-radius:8px; display:none; background:var(--accent-soft); color:#234}
+  .verdict.show{display:block}
+
+  /* quiz */
+  .quiz{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 24px 24px; margin:28px 0}
+  .q{padding:20px 0; border-bottom:1px solid var(--line)} .q:last-child{border-bottom:none}
+  .q p.qtext{font-weight:600; margin:6px 0 14px}
+  .opt{display:block; width:100%; text-align:left; background:var(--bg); border:1.5px solid var(--line); border-radius:9px; padding:11px 14px; margin:8px 0; font:inherit; font-size:15px; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--ok); background:#eaf5ee}
+  .opt.wrong{border-color:var(--bad); background:#fbecec}
+  .opt:disabled{cursor:default}
+  .fb{font-size:14.5px; margin-top:10px; padding:11px 14px; border-radius:8px; display:none}
+  .fb.show{display:block}
+  .fb.good{background:#eaf5ee; color:#1f5c3a}
+  .fb.bad{background:#fbecec; color:#7d2025}
+  .score{font-size:15px; font-weight:600; margin-top:18px; text-align:center; color:var(--muted)}
+
+  .ask{margin-top:40px; background:#1a1a1a; color:#f3efe6; border-radius:14px; padding:22px 24px}
+  .ask b{color:#fff}
+  footer{margin-top:30px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted)}
+  footer ol{padding-left:20px; margin:8px 0} footer a{color:var(--accent)}
+  @media print{ body{background:#fff;padding:0} .quiz,.ask,.triage,.types,.ladder{break-inside:avoid} .opt,.tbtn{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Lesson 6 · Trunk-Based Development</p>
+    <h1>Hiding Work Behind Flags</h1>
+    <div class="goal"><b>By the end of this lesson</b> you'll know why a feature flag is the thing that lets unfinished work ride on trunk — the move you make <em>instead of</em> holding a branch open — the four kinds of toggle and how long each should live, the one piece of architecture you insist your agents use, and the discipline that stops flags from becoming permanent debt.</div>
+  </header>
+
+  <p class="lead">Lesson 5 ended on a promise: code merges, auto-deploys to production, and then sits <em>dark</em> until you decide to release it. This lesson is the mechanism that makes that possible. A feature flag is the small switch that lets a half-built feature live safely on a trunk you keep releasable — and it's what the whole short-lived-branch model quietly depends on.</p>
+
+  <h2><span class="n">1</span>The flag is what you reach for <em>instead of</em> a long branch</h2>
+  <p>Lessons 1–2 told you branches must stay short — hours, not weeks. But real features take longer than a few hours to build. So where does the "not finished yet" state live while the work is in progress? You have exactly two places to put it:</p>
+  <figure>
+  <svg viewBox="0 0 680 230" xmlns="http://www.w3.org/2000/svg" width="100%" role="img" aria-label="Top: a long-lived branch holds unfinished work off to the side for weeks, then a big risky merge. Bottom: short branches merge to trunk daily, the unfinished feature sits dark behind a flag, then a flag flip releases it.">
+    <defs><marker id="a" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5b5b5b"/></marker></defs>
+    <g font-family="sans-serif" font-size="12">
+      <!-- TOP: long-lived branch -->
+      <text x="0" y="26" font-size="12" font-weight="700" fill="#b4541f">Branch holds the unfinished state</text>
+      <line x1="40" y1="58" x2="640" y2="58" stroke="#1a1a1a" stroke-width="2.5"/>
+      <text x="40" y="50" font-size="10" fill="#5b5b5b">main</text>
+      <path d="M120,58 C160,58 160,34 200,34 L520,34 C560,34 560,58 600,58" fill="none" stroke="#b4541f" stroke-width="2" stroke-dasharray="5 4"/>
+      <circle cx="200" cy="34" r="4" fill="#b4541f"/><circle cx="320" cy="34" r="4" fill="#b4541f"/><circle cx="440" cy="34" r="4" fill="#b4541f"/>
+      <text x="360" y="24" text-anchor="middle" font-size="10.5" fill="#b4541f">2 weeks adrift · drifts from main · one big risky merge</text>
+      <circle cx="600" cy="58" r="6" fill="#b4541f"/>
+      <!-- BOTTOM: flag on trunk -->
+      <text x="0" y="138" font-size="12" font-weight="700" fill="#2e7d52">Flag holds the unfinished state</text>
+      <line x1="40" y1="170" x2="640" y2="170" stroke="#1a1a1a" stroke-width="2.5"/>
+      <text x="40" y="162" font-size="10" fill="#5b5b5b">main</text>
+      <g stroke="#2e7d52" stroke-width="2" fill="none">
+        <path d="M150,170 C168,170 168,150 186,150 L206,150 C224,150 224,170 242,170"/>
+        <path d="M300,170 C318,170 318,150 336,150 L356,150 C374,150 374,170 392,170"/>
+        <path d="M450,170 C468,170 468,150 486,150 L506,150 C524,150 524,170 542,170"/>
+      </g>
+      <circle cx="242" cy="170" r="5" fill="#2e7d52"/><circle cx="392" cy="170" r="5" fill="#2e7d52"/><circle cx="542" cy="170" r="5" fill="#2e7d52"/>
+      <text x="350" y="200" text-anchor="middle" font-size="10.5" fill="#2e7d52">small daily merges · feature dark behind flag the whole time</text>
+      <rect x="566" y="156" width="74" height="28" rx="7" fill="#e7f3ec" stroke="#2e7d52"/>
+      <text x="603" y="174" text-anchor="middle" font-size="11" font-weight="700" fill="#2e7d52">flag ON</text>
+      <text x="603" y="148" text-anchor="middle" font-size="9.5" fill="#2e7d52">you flip it</text>
+    </g>
+  </svg>
+  <figcaption>Same half-built feature, two homes for the "not done yet" state. The long branch keeps it <em>off</em> trunk and out of integration; the flag keeps it <em>on</em> trunk, integrated daily, just invisible to users until you flip it.<sup><a href="#r1">1</a></sup></figcaption>
+  </figure>
+  <p>That's the whole trade. A long-lived branch and a feature flag solve the same problem — "this isn't ready to show anyone" — but the flag is the one that's compatible with everything in Lessons 1–5: small PRs, daily integration, a trunk that's always releasable, deploy decoupled from release.<sup><a href="#r1">1</a></sup> When you direct an agent to build something too big to finish in one reviewable PR, the instruction isn't "keep working on a branch." It's "<em>land it in pieces behind a flag.</em>"</p>
+
+  <h2><span class="n">2</span>Four kinds of toggle — and how long each should live</h2>
+  <p>"Feature flag" is one phrase for four different tools, and the difference that matters to you is <b>lifespan</b>. Some are temporary scaffolding you must tear down; some are permanent parts of the product. Knowing which kind you just created is what tells you whether it's debt.<sup><a href="#r1">1</a></sup></p>
+  <div class="types">
+    <div class="type short">
+      <div class="h">Release toggle</div>
+      <div class="b">Hides in-progress work so it can merge to trunk dark. The kind this whole lesson is about.</div>
+      <div class="life">Lifespan: days–weeks · remove after launch</div>
+    </div>
+    <div class="type short">
+      <div class="h">Experiment toggle</div>
+      <div class="b">Splits users (A/B, % rollout) to measure which variant wins. Drives a decision, then you keep the winner.</div>
+      <div class="life">Lifespan: the experiment · then remove</div>
+    </div>
+    <div class="type long">
+      <div class="h">Ops toggle</div>
+      <div class="b">A kill switch / circuit breaker — turn an expensive or risky feature off fast in production without a deploy.</div>
+      <div class="life">Lifespan: long-lived, sometimes permanent</div>
+    </div>
+    <div class="type long">
+      <div class="h">Permissioning toggle</div>
+      <div class="b">Gates a feature by user or plan — "Pro accounts only." Really a product rule wearing a flag's clothes.</div>
+      <div class="life">Lifespan: permanent · not debt</div>
+    </div>
+  </div>
+  <p>The two on the left are <b>temporary by definition</b>: a release or experiment toggle that's still in the code after its job is done is the flag debt you'll meet in §4. The two on the right are <b>legitimately long-lived</b> — an ops kill switch or a plan gate is doing ongoing work, not waiting to be deleted. Same mechanism; opposite expectations.</p>
+
+  <h2><span class="n">3</span>The one rule of flag architecture: own the wrapper</h2>
+  <p>Here's the failure mode that's specific to <em>your</em> setup, where agents write the code. Ask an agent to put something behind a flag and its default move is to reach straight for a vendor SDK and scatter calls like <code>posthog.isFeatureEnabled('csv-export')</code> across a dozen components.<sup><a href="#r2">2</a></sup> It works — and it quietly welds your codebase to that one vendor, with no single place to change a default, enforce a type, or test the off-state.</p>
+  <p>So you insist on one rule: <b>every flag check goes through a thin wrapper your team owns</b> — call it <code>FlagClient</code> — and the vendor's name appears in exactly one file behind it.<sup><a href="#r2">2</a></sup></p>
+  <pre><span class="c">// lib/flags.ts — the ONE file where a vendor name appears</span>
+<span class="k">import</span> { posthog } <span class="k">from</span> <span class="s">'./posthog'</span>
+
+<span class="k">export const</span> <span class="v">FlagClient</span> = {
+  isOn(key, fallback = <span class="k">false</span>) {
+    <span class="k">return</span> posthog.isFeatureEnabled(key) ?? fallback   <span class="c">// default OFF</span>
+  },
+}
+
+<span class="c">// anywhere else in the app — no vendor in sight</span>
+<span class="k">if</span> (FlagClient.isOn(<span class="s">'csv-export'</span>)) renderExportButton()</pre>
+  <p class="cap">Call sites never name the vendor. Swap PostHog for an env var — or for nothing — by editing one file.</p>
+  <p>The payoff is all leverage you care about as the director: you can <b>swap the whole flag backend</b> (even from a paid vendor to a free env var) without touching a single feature; you get <b>one place</b> to force "default off" so a missing flag can never accidentally expose unfinished work; and the off-state is <b>trivially testable</b>. None of this is extra work for you — it's a line in the brief, exactly like the Conventional-Commit title rule from Lesson 5:</p>
+  <div class="you"><b>The brief line that buys all of it:</b> <em>"Put the export button behind our <code>FlagClient</code> (key <code>csv-export</code>, default off). Don't call the flag vendor's SDK directly anywhere outside <code>lib/flags.ts</code>."</em> This is the same skill as scoping a task in Lesson 3 — you're setting an architectural boundary in the instruction, before any code exists, so it never shows up as sprawl in the diff.</div>
+
+  <h2><span class="n">4</span>Flag debt: every temporary flag gets an owner and a removal date</h2>
+  <p>A release toggle is scaffolding. Once the feature is fully launched, the flag has done its job — and every release/experiment toggle you leave behind is a live <code>if</code> that <b>doubles a code path forever</b>: two ways the code can run, two things to test, one of them dead. Let enough of them pile up and your trunk is a maze of switches no one remembers the state of.<sup><a href="#r1">1</a></sup></p>
+  <p>The discipline is cheap and it's <em>yours</em> to enforce, because the agent won't volunteer it: <b>at the moment a temporary flag is created, it gets an owner and a removal date.</b> And "remove the flag" is not a someday-chore — the cleanup PR that deletes the flag and the dead branch of the <code>if</code> is <b>part of the definition of done</b> for the feature. In Lesson 5's vocabulary that's a small <code>chore:</code> or <code>refactor:</code> PR, reviewed like any other.</p>
+  <div class="callout"><b>Watch for this on review:</b> a PR that <em>adds</em> a flag but the feature it was hiding shipped weeks ago — or a flag with no stated owner or removal date. Both are debt being created in front of you. The fix is a sentence: "this is a release toggle; when does it come out, and who owns deleting it?" Permissioning and ops toggles are exempt — they're meant to stay.</div>
+
+  <h2><span class="n">5</span>Do you even need a vendor? The decision ladder</h2>
+  <p>Because agents reach for a vendor SDK reflexively, the most useful judgment you bring is knowing when <em>not</em> to. Most "hide this until it's done" needs are met by the cheapest rung. Climb only when a concrete capability forces you to — and since everything sits behind the <code>FlagClient</code> wrapper, the choice is reversible.</p>
+  <div class="ladder">
+    <div class="rung pick">
+      <div class="lvl">1</div>
+      <div>
+        <div class="h">Env var / config toggle<span class="tag">start here</span></div>
+        <div class="b">A boolean in config, flipped by a deploy. Perfect when the flag <em>only</em> hides unfinished work and needs no runtime flip, no per-user targeting, no measurement. The "you don't need a vendor yet" baseline — and the rung agents skip straight past.<sup><a href="#r2">2</a></sup></div>
+      </div>
+    </div>
+    <div class="rung">
+      <div class="lvl">2</div>
+      <div>
+        <div class="h">A flag service — and PostHog is the pick</div>
+        <div class="b">Climb here the moment you need any of: flip a flag <b>without a deploy</b>, roll out to a <b>% of users</b>, <b>target</b> by plan/user, a real <b>kill switch</b>, or run an <b>experiment</b>. For this greenfield SaaS, PostHog is the best single bet — flags + product analytics + session replay + experiments in one tool, ~1M flag requests/month free, with an open-source self-host escape hatch.<sup><a href="#r3">3</a></sup></div>
+        <div class="alts"><b>Others, and when they'd win:</b> <b>Vercel Flags SDK</b> — free "flags as code," Next.js-native, and can use PostHog as its backing provider, so it's not either/or.<sup><a href="#r4">4</a></sup> <b>LaunchDarkly</b> — enterprise governance/compliance; overkill for a solo greenfield. <b>GrowthBook / Unleash</b> — open-source, self-host, free but more ops to run. <b>Statsig</b> — unlimited free flags, but now OpenAI-owned (strategic uncertainty for a long-lived bet).<sup><a href="#r5">5</a></sup></div>
+      </div>
+    </div>
+  </div>
+  <div class="you"><b>Your move as director:</b> default new "hide this" requests to rung 1 and let the agent prove it needs rung 2. The wrapper means picking PostHog today and replacing it with an env var (or vice-versa) tomorrow is a one-file change — so this is a low-stakes, reversible call, not a vendor marriage.</div>
+
+  <h2><span class="n">6</span>Practice A: config toggle, or a flag service?</h2>
+  <p>For each need, pick the lowest rung that actually does the job:</p>
+  <div class="triage" id="rung">
+    <div class="pr" data-correct="config">
+      <div class="title">Hide a half-built Settings redesign so it can merge to trunk now. You'll switch it on in a deploy once it's finished. No targeting, no runtime flip.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="config">Env var / config toggle</button>
+        <button class="tbtn" data-k="vendor">Flag service (PostHog)</button>
+      </div>
+      <div class="verdict">✅ <b>Config toggle.</b> It only hides unfinished work and flips at deploy time — the rung-1 baseline. Reaching for a vendor here is the reflex to resist.</div>
+    </div>
+    <div class="pr" data-correct="vendor">
+      <div class="title">Show a new onboarding flow to 10% of new signups and compare activation against the old one for two weeks.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="config">Env var / config toggle</button>
+        <button class="tbtn" data-k="vendor">Flag service (PostHog)</button>
+      </div>
+      <div class="verdict">✅ <b>Flag service.</b> Percentage rollout plus measuring a result is an experiment toggle — exactly the capability you climb to rung 2 for.</div>
+    </div>
+    <div class="pr" data-correct="vendor">
+      <div class="title">A third-party billing widget gets flaky in production. You want to switch it off in seconds — without waiting for a deploy.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="config">Env var / config toggle</button>
+        <button class="tbtn" data-k="vendor">Flag service (PostHog)</button>
+      </div>
+      <div class="verdict">✅ <b>Flag service.</b> "Off in seconds, no deploy" is a runtime kill switch (an ops toggle). A config toggle can't flip without shipping, so it can't do this job.</div>
+    </div>
+  </div>
+
+  <h2><span class="n">7</span>Practice B: name the toggle — and is it debt?</h2>
+  <p>Pick the type, and notice which ones you'll have to schedule for removal:</p>
+  <div class="triage" id="type">
+    <div class="pr" data-correct="release">
+      <div class="title">Gate the in-progress CSV export so it merges to trunk but stays invisible until it's finished.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="release">Release</button>
+        <button class="tbtn" data-k="experiment">Experiment</button>
+        <button class="tbtn" data-k="ops">Ops</button>
+        <button class="tbtn" data-k="perm">Permissioning</button>
+      </div>
+      <div class="verdict">✅ <b>Release toggle</b> — temporary scaffolding. Give it an owner and a removal date now; the cleanup PR is part of "done."</div>
+    </div>
+    <div class="pr" data-correct="experiment">
+      <div class="title">Show pricing-page variant B to half of visitors and measure which converts better over two weeks.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="release">Release</button>
+        <button class="tbtn" data-k="experiment">Experiment</button>
+        <button class="tbtn" data-k="ops">Ops</button>
+        <button class="tbtn" data-k="perm">Permissioning</button>
+      </div>
+      <div class="verdict">✅ <b>Experiment toggle</b> — lives only as long as the test. Once a winner's picked, keep it and delete the flag. Also debt if it lingers.</div>
+    </div>
+    <div class="pr" data-correct="ops">
+      <div class="title">A switch that instantly disables the recommendation engine if it starts overloading the database.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="release">Release</button>
+        <button class="tbtn" data-k="experiment">Experiment</button>
+        <button class="tbtn" data-k="ops">Ops</button>
+        <button class="tbtn" data-k="perm">Permissioning</button>
+      </div>
+      <div class="verdict">✅ <b>Ops toggle</b> — a kill switch. Legitimately long-lived; it's doing ongoing safety work, not waiting to be deleted. Not debt.</div>
+    </div>
+    <div class="pr" data-correct="perm">
+      <div class="title">Only Pro-plan accounts can open the audit log.</div>
+      <div class="btns">
+        <button class="tbtn" data-k="release">Release</button>
+        <button class="tbtn" data-k="experiment">Experiment</button>
+        <button class="tbtn" data-k="ops">Ops</button>
+        <button class="tbtn" data-k="perm">Permissioning</button>
+      </div>
+      <div class="verdict">✅ <b>Permissioning toggle</b> — a product rule, permanent by design. Don't schedule it for removal; it's not debt.</div>
+    </div>
+  </div>
+
+  <h2><span class="n">8</span>Check yourself</h2>
+  <div class="quiz" id="quiz">
+    <div class="q" data-correct="c">
+      <p class="qtext">1. A feature is too big to finish in one small PR. What does trunk-based development have you do?</p>
+      <button class="opt" data-k="a">Keep a branch open until the whole feature is complete, then merge it all at once.</button>
+      <button class="opt" data-k="b">Lower your standards and merge a 2,000-line PR so it lands in one piece.</button>
+      <button class="opt" data-k="c">Land it in small pieces on trunk, hidden behind a feature flag, and flip the flag when it's done.</button>
+      <div class="fb good">Right. The flag holds the "not ready" state <em>on</em> trunk, so branches stay short and the trunk stays releasable the whole time.</div>
+      <div class="fb bad">Re-read §1. A long-lived branch is the thing flags exist to replace — it breaks daily integration and ends in one big risky merge. The flag lets the unfinished work ride on trunk, dark, in small PRs.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">2. An agent's PR adds <code>posthog.isFeatureEnabled('x')</code> checks directly in five different components. As reviewer, what do you do?</p>
+      <button class="opt" data-k="a">Approve it — the vendor SDK is the standard way to read a flag.</button>
+      <button class="opt" data-k="b">Send it back: route every check through your own <code>FlagClient</code> wrapper so the vendor's name lives in one file.</button>
+      <button class="opt" data-k="c">Approve it but ask the agent to add comments next to each call.</button>
+      <div class="fb good">Exactly. The wrapper buys you a swappable backend, one place to enforce "default off," and a testable off-state — for the cost of one line in the brief.</div>
+      <div class="fb bad">Re-read §3. Scattering the vendor SDK welds your codebase to that vendor and leaves no single place to change a default or test the off-state. Insist on the team-owned <code>FlagClient</code> wrapper.</div>
+    </div>
+
+    <div class="q" data-correct="a">
+      <p class="qtext">3. Which flag is most likely to be <em>debt</em> you must schedule for removal?</p>
+      <button class="opt" data-k="a">A release toggle still in the code weeks after its feature fully launched.</button>
+      <button class="opt" data-k="b">An ops kill switch that disables a heavy feature under load.</button>
+      <button class="opt" data-k="c">A permissioning toggle that limits a feature to Pro-plan accounts.</button>
+      <div class="fb good">Right. Release (and experiment) toggles are temporary scaffolding — once the job's done they're a dead code path. Ops and permissioning toggles are legitimately long-lived.</div>
+      <div class="fb bad">Re-read §2 and §4. Ops and permissioning toggles are meant to stay. It's the temporary release/experiment toggle, still live after launch, that's the debt — it doubles a code path for nothing.</div>
+    </div>
+
+    <div class="q" data-correct="b">
+      <p class="qtext">4. You just need to hide a half-finished page until it's done — no runtime flip, no targeting, no measurement. The cheapest right tool?</p>
+      <button class="opt" data-k="a">Sign up for LaunchDarkly to do it properly from the start.</button>
+      <button class="opt" data-k="b">An env var / config toggle behind your <code>FlagClient</code> — you don't need a vendor for this yet.</button>
+      <button class="opt" data-k="c">Keep the work on a long-lived branch until the page is finished.</button>
+      <div class="fb good">Right. That's rung 1. The wrapper means you can graduate to PostHog later in a one-file change if a real need (rollout, targeting, kill switch) shows up.</div>
+      <div class="fb bad">Re-read §5. When a flag only hides unfinished work and flips at deploy time, an env var is the right rung. A vendor is for runtime flips, % rollout, targeting, or experiments — none of which this needs.</div>
+    </div>
+    <div class="score" id="score">Answer the questions above to see your score.</div>
+  </div>
+
+  <div class="ask">
+    <b>Ask your teacher.</b> Good follow-ups from here:
+    <ul style="margin:10px 0 0">
+      <li>"Write me the exact brief line that puts a feature behind our <code>FlagClient</code> with an owner and removal date."</li>
+      <li>"Show me a real <code>FlagClient</code> that starts as an env var and later swaps to PostHog without touching call sites."</li>
+      <li>"How would I track open flags so I actually notice when one is overdue for removal?"</li>
+      <li>"When a flagged feature has a bug in production, is the fix still just roll-forward — Lesson 5?"</li>
+      <li>"Walk me through a real hotfix: roll-forward vs cherry-pick — Lesson 7."</li>
+    </ul>
+  </div>
+
+  <footer>
+    <b>Sources</b> (fetched &amp; verified 2026-06-09):
+    <ol>
+      <li id="r1"><a href="https://martinfowler.com/articles/feature-toggles.html">Feature Toggles (a.k.a. Feature Flags)</a> — Pete Hodgson / martinfowler.com (the taxonomy — release, experiment, ops, permissioning toggles — their differing lifespans, and managing toggle debt; flags let incomplete work merge to trunk hidden from users).</li>
+      <li id="r2"><a href="https://www.leadwise.pro/en/blog/statsig-posthog-and-launchdarkly-feature-flag-choices-in-ai-generated-code">Feature flags in AI-generated code</a> — LeadWise (AI agents default to a vendor SDK even when an env-var toggle would do; the fix is a thin team-owned <code>FlagClient</code> wrapper plus a cleanup discipline — every flag gets an owner and a removal date).</li>
+      <li id="r3"><a href="https://posthog.com/docs/feature-flags">PostHog — Feature flags</a> &amp; <a href="https://posthog.com/pricing">pricing</a> (boolean release toggles, % rollout, user/group targeting, kill switches; ~1M flag requests/mo free; open-source/self-host escape hatch — the recommended single tool for a greenfield SaaS).</li>
+      <li id="r4"><a href="https://vercel.com/docs/flags">Vercel Flags SDK</a> / <a href="https://flags-sdk.dev/">flags-sdk.dev</a> (free, open-source, provider-agnostic "flags as code"; Next.js-native; can use PostHog as its backing provider).</li>
+      <li id="r5"><a href="https://posthog.com/blog/best-feature-flag-software-for-developers">Best feature-flag software, compared</a> — PostHog (landscape: PostHog / Vercel / LaunchDarkly enterprise-governance / GrowthBook + Unleash OSS self-host / Statsig unlimited-free-but-OpenAI-owned — for framing when <em>not</em> to reach for a vendor).</li>
+    </ol>
+    See <code>reference/glossary.html</code> for terms · pays off Lesson 5's "deploy ≠ release" promise · feeds Lesson 7 (hotfixes).
+  </footer>
+</div>
+
+<script>
+  // shared scenario / tagging widgets (#rung and #type)
+  document.querySelectorAll('.triage .pr').forEach(pr => {
+    const key = pr.dataset.correct;
+    const btns = pr.querySelectorAll('.tbtn');
+    const verdict = pr.querySelector('.verdict');
+    btns.forEach(b => b.addEventListener('click', () => {
+      if (pr.dataset.done) return; pr.dataset.done = '1';
+      btns.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add(o === b ? 'picked-right' : 'reveal-right');
+        else if (o === b) o.classList.add('picked-wrong'); });
+      verdict.classList.add('show');
+    }));
+  });
+  // quiz
+  let answered = 0, correct = 0;
+  document.querySelectorAll('.q').forEach(q => {
+    const key = q.dataset.correct;
+    const opts = q.querySelectorAll('.opt');
+    const good = q.querySelector('.fb.good'), bad = q.querySelector('.fb.bad');
+    opts.forEach(opt => opt.addEventListener('click', () => {
+      if (q.dataset.done) return; q.dataset.done = '1'; answered++;
+      const right = opt.dataset.k === key; if (right) correct++;
+      opts.forEach(o => { o.disabled = true;
+        if (o.dataset.k === key) o.classList.add('correct');
+        else if (o === opt) o.classList.add('wrong'); });
+      (right ? good : bad).classList.add('show');
+      document.getElementById('score').textContent = correct + ' / ' + answered + ' so far' +
+        (answered === 4 ? (correct === 4 ? ' — you can hide work on trunk without a long branch, and keep flags from rotting into debt. Ready for Lesson 7.' : ' — check the highlighted answers, then ask me anything.') : '');
+    }));
+  });
+</script>
+</body>
+</html>

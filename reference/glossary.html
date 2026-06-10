@@ -72,8 +72,20 @@
     <dd>The state TBD protects: the trunk could be deployed to production at any moment without breaking. Nothing half-finished is ever visible on it.</dd>
 
     <dt>Feature flag (feature toggle) <span class="tag">practice</span></dt>
-    <dd>A runtime switch that hides incomplete or not-yet-launched work. It lets you merge unfinished features into the trunk (keeping branches short) without exposing them to users.
+    <dd>A runtime switch that hides incomplete or not-yet-launched work. It lets you merge unfinished features into the trunk (keeping branches short) without exposing them to users — the move you make <em>instead of</em> holding a long-lived branch open.
       <div class="x"><a href="https://martinfowler.com/articles/feature-toggles.html">martinfowler.com — Feature Toggles</a></div></dd>
+
+    <dt>Toggle types <span class="tag">flags</span></dt>
+    <dd>"Feature flag" is one word for four tools with different lifespans. <strong>Release toggle:</strong> hides in-progress work (short-lived; remove after launch). <strong>Experiment toggle:</strong> splits users to measure a variant (lives as long as the experiment). <strong>Ops toggle:</strong> a kill switch / circuit breaker to disable a feature fast in production (long-lived, sometimes permanent). <strong>Permissioning toggle:</strong> gates a feature by user/plan, e.g. "Pro only" (permanent — a product rule, not debt). The first two are temporary scaffolding; the last two are meant to stay.
+      <div class="x"><a href="https://martinfowler.com/articles/feature-toggles.html">martinfowler.com — Feature Toggles</a></div></dd>
+
+    <dt>FlagClient (the wrapper) <span class="tag">flags</span></dt>
+    <dd>A thin, team-owned module that every flag check goes through, so the vendor's SDK is named in exactly one file. Left to themselves, AI agents scatter raw vendor calls (e.g. <code>posthog.isFeatureEnabled(...)</code>) across the codebase; insisting on the wrapper buys a swappable backend, one place to enforce "default off," and a testable off-state — for the cost of one line in the brief.
+      <div class="x"><a href="https://www.leadwise.pro/en/blog/statsig-posthog-and-launchdarkly-feature-flag-choices-in-ai-generated-code">LeadWise — flags in AI-generated code</a></div></dd>
+
+    <dt>Flag debt <span class="tag">flags</span></dt>
+    <dd>A temporary toggle (release or experiment) left in the code after its job is done. Each one is a live <code>if</code> that doubles a code path forever — two ways to run, one of them dead. The discipline: every temporary flag gets an <strong>owner</strong> and a <strong>removal date</strong> at creation, and the cleanup PR that deletes it is part of the feature's "done." Ops and permissioning toggles are exempt — they're meant to stay.
+      <div class="x"><a href="https://martinfowler.com/articles/feature-toggles.html">martinfowler.com — Feature Toggles (managing toggle debt)</a></div></dd>
 
     <dt>Deploy vs. release <span class="tag">release</span></dt>
     <dd>Two separate events you control independently. <strong>Deploy:</strong> the code is built and running on production infrastructure — automatic on every merge to <code>main</code> in a CD setup. <strong>Release:</strong> a user can actually see/use the feature — a separate decision, usually a feature-flag flip. Decoupling them is what lets unfinished work deploy to production while staying hidden.
